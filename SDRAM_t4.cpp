@@ -1,8 +1,5 @@
 #include "SDRAM_t4.h"
 
-#include "core_pins.h"
-#include "math.h"
-
 #include <smalloc.h>
 extern "C" struct smalloc_pool sdram_smalloc_pool;
 
@@ -243,13 +240,10 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
     * If it doesn't work, maybe try soldering a 5pF or 10pF capacitor at C29 
     */    
         
-    //delayMicroseconds(1);
-    
+    delayMicroseconds(1);
     const float freq = 664.62e6 / (float)clockdiv;
     CCM_CCGR3 |= CCM_CCGR3_SEMC(CCM_CCGR_ON);
     
-
-
     // software reset
     SEMC_BR0 = 0;
     SEMC_BR1 = 0;
@@ -261,19 +255,17 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
     SEMC_BR7 = 0;
     SEMC_BR8 = 0;
     SEMC_MCR = SEMC_MCR_SWRST;
-    //elapsedMicros timeout = 0;
-    uint32_t time_now = micros();
+    elapsedMicros timeout = 0;
     while (SEMC_MCR & SEMC_MCR_SWRST) {
-        //if (timeout > 1500) return false;
-        if((micros() - time_now) > 1500) return false;
+        if (timeout > 1500) return false;
     }
 
     configure_sdram_pins();
 
     //if(NOCAP == 1) {
-    //    SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
+        SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
     //} else  { // enable SEMC_MCR_DQSMD (EMC_39
-        SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
+    //    SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
     //}
 
     // TODO: reference manual page 1364 says "Recommend to set BMCR0 with 0x0 for
@@ -359,13 +351,15 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
     if(result_cmd == false) return false;
     
 	unsigned long _extsdram_start = 0x90000000;
-	unsigned long _extsdram_end = 0x90000000 + external_sdram_size * 0x100000;
+	unsigned long _extsdram_end = 0x90000000 + (32*1024*1024);
     
     // TODO: zero uninitialized EXTMEM variables
     // TODO: copy from flash to initialize EXTMEM variables
-    sm_set_pool(&sdram_smalloc_pool, &_extsdram_end,
-        external_sdram_size * 0x100000 -
-        ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
-        1, NULL);    
+    //sm_set_pool(&sdram_smalloc_pool, &_extsdram_end,
+    //    external_sdram_size * 0x100000 -
+    //    ((uint32_t)_extsdram_end - (uint32_t)_extsdram_start),
+    //    1, NULL);    
+        
+    sm_set_pool(&sdram_smalloc_pool, (void *)0x90000000, external_sdram_size * 1024 *1024, 1, NULL);
     return true; // hopefully SDRAM now working at 80000000 to 81FFFFFF
 }
