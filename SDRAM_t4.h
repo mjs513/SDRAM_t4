@@ -9,7 +9,7 @@
 //	SCB_MPU_RBAR = 0x91E00000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 //	SCB_MPU_RASR = MEM_NOCACHE | READWRITE | NOEXEC | SIZE_2M;
 
-
+#include "Arduino.h"
 #include "smalloc.h"
 
 extern "C" {

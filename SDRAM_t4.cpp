@@ -350,16 +350,7 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
 
     if(result_cmd == false) return false;
     
-	unsigned long _extsdram_start = 0x90000000;
-	unsigned long _extsdram_end = 0x90000000 + (32*1024*1024);
-    
-    // TODO: zero uninitialized EXTMEM variables
-    // TODO: copy from flash to initialize EXTMEM variables
-    //sm_set_pool(&sdram_smalloc_pool, &_extsdram_end,
-    //    external_sdram_size * 0x100000 -
-    //    ((uint32_t)_extsdram_end - (uint32_t)_extsdram_start),
-    //    1, NULL);    
-        
     sm_set_pool(&sdram_smalloc_pool, (void *)0x90000000, external_sdram_size * 1024 *1024, 1, NULL);
+
     return true; // hopefully SDRAM now working at 80000000 to 81FFFFFF
 }
