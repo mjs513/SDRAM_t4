@@ -1,5 +1,10 @@
 #include "SDRAM_t4.h"
 
+#include <smalloc.h>
+extern "C" struct smalloc_pool sdram_smalloc_pool;
+
+uint8_t _size = 0;
+    
 unsigned int SDRAM_t4::ns_to_clocks(float ns, float freq)
 {
     float clocks = ceilf(ns * 1.0e-9f * freq);
@@ -215,13 +220,14 @@ bool SDRAM_t4::IPCommandComplete()
     return true;
 }
 
-bool SDRAM_t4::init()
+bool SDRAM_t4::begin(uint8_t external_sdram_size)
 {
+    _size = external_sdram_size;
     // use PLL3 PFD1 664.62 divided by 4 or 5, for 166 or 133 MHz
     // 5 = 133mhz
     // 4 = 166mhz - SDRAM rated,  see post #60
     // 3 = 221mhz
-    const unsigned int clockdiv = 4;
+    const unsigned int clockdiv = 5;
 
     CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
         CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
@@ -240,8 +246,6 @@ bool SDRAM_t4::init()
     const float freq = 664.62e6 / (float)clockdiv;
     CCM_CCGR3 |= CCM_CCGR3_SEMC(CCM_CCGR_ON);
     
-
-
     // software reset
     SEMC_BR0 = 0;
     SEMC_BR1 = 0;
@@ -261,9 +265,9 @@ bool SDRAM_t4::init()
     configure_sdram_pins();
 
     //if(NOCAP == 1) {
-    //    SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
+        SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
     //} else  { // enable SEMC_MCR_DQSMD (EMC_39
-        SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
+    //    SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
     //}
 
     // TODO: reference manual page 1364 says "Recommend to set BMCR0 with 0x0 for
@@ -302,7 +306,7 @@ bool SDRAM_t4::init()
 
     if (prescale > 256)
     {
-        Serial.println("Invalid Timer Setting");
+        //Serial.println("Invalid Timer Setting");
         while(1){}
     }
 
@@ -347,5 +351,32 @@ bool SDRAM_t4::init()
     SEMC_SDRAMCR3 |= SEMC_SDRAMCR3_REN;
 
     if(result_cmd == false) return false;
+    
+    sm_set_pool(&sdram_smalloc_pool, (void *)0x90000000, external_sdram_size * 1024 *1024, 1, NULL);
+
+    if(!check_fixed_pattern(0x5A698421))
+        return false;
+
+
     return true; // hopefully SDRAM now working at 80000000 to 81FFFFFF
+}
+
+bool SDRAM_t4::check_fixed_pattern(uint32_t pattern)
+{
+	volatile uint32_t *p;
+    uint32_t *memory_begin, *memory_end;
+    memory_begin = (uint32_t *)(0x90000000);
+	memory_end = (uint32_t *)(0x90000000 + _size * 1048576);
+    
+	//Serial.printf("testing with fixed pattern %08X\n", pattern);
+	for (p = memory_begin; p < memory_end; p++) {
+		*p = pattern;
+	}
+	arm_dcache_flush_delete((void *)memory_begin,
+		(uint32_t)memory_end - (uint32_t)memory_begin);
+	for (p = memory_begin; p < memory_end; p++) {
+		uint32_t actual = *p;
+		if (actual != pattern) return false;
+	}
+	return true;
 }

@@ -34,5 +34,3 @@ sdram_free -   dynamically de-allocate the memory
 
 Simple examples are provided. But for more info on these methods check out: https://www.geeksforgeeks.org/dynamic-memory-allocation-in-c-using-malloc-calloc-free-and-realloc/
 
-
-
