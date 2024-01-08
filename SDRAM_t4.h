@@ -29,6 +29,7 @@ private:
     static void configure_sdram_pins();
     static bool SendIPCommand(uint32_t address, uint16_t command, uint32_t write, uint32_t *read);
     static bool IPCommandComplete();
+    static bool check_fixed_pattern(uint32_t pattern);
        
 };
 #endif
