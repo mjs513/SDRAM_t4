@@ -1,3 +1,10 @@
+/******************************************************************
+ *
+ * This sketch test 32gb SDRAM memory chip (ISI IS42S16160J)
+ * with random and fixed patterns
+ *
+ ******************************************************************/
+
 #include "SDRAM_t4.h"
 
 //constructor for 
