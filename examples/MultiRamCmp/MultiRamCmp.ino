@@ -1,53 +1,59 @@
 #include "SDRAM_t4.h"
 SDRAM_t4 sdram;
 
-#define CHUNKS 128*1024
-uint32_t ram1DTCM[CHUNKS / sizeof(uint32_t)];
-uint32_t ram2DMA[4];
-uint32_t sdramPtr[256];
+#define CHUNKS 128*1024 // allocate in 128KB byte chunks
+#define CHUNKS_4B (CHUNKS / sizeof(uint32_t)) // 4 byte uint32_T's per CHUNK
+uint32_t ram1DTCM[CHUNKS_4B]; // Fixed RAM1 compile time allocation
+uint32_t* ram2Ptr[5]; // create pointers for RAM2 allocations
+uint32_t* sdramPtr[257]; // create pointers for SDRAM allocations
 
 void setup() {
   uint ii, jj, kk;
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(13, HIGH);
   while (!Serial) ; // wait
   if ( CrashReport ) Serial.print( CrashReport );
-  for ( int ii = 0; ii < 4; ii++ )
-    ram2DMA[ii] = (uint32_t *)malloc( CHUNKS );
-  if (sdram.begin())
-    Serial.print( "\n\tSUCCESS sdram.init()\n");
-  else
-    Serial.print( "\n\tFAILED sdram.init()\n");
-  for ( int ii = 0; ii < 256; ii++ )
-    ram2DMA[ii] = (uint32_t *)sdram_malloc( CHUNKS );
-  for ( int ii = 0; ii < CHUNKS / sizeof(uint32_t); ii++ )
+
+  for ( ii = 0; ii < CHUNKS_4B; ii++ ) // Initialize RAM1 data area to some value
     ram1DTCM[ii] = ii;
+Serial.println( __LINE__ ); delay(1);
+  for ( ii = 0; ii < 4; ii++ )  // Alloc from RAM2/DMAMEM with malloc
+    ram2Ptr[ii] = (uint32_t *)malloc( CHUNKS );
+Serial.println( __LINE__ ); delay(1);
   jj = 0;
-  while ( ram2DMA[jj++] ) {
-    for ( int ii = 0; ii < CHUNKS / sizeof(uint32_t); ii++ )
-      ram2DMA[jj][ii] = ram1DTCM[ii];
+  while ( ram2Ptr[jj] ) { // Initialize each chunk of RAM2 with value from RAM1
+    for ( ii = 0; ii < CHUNKS_4B; ii++ )
+      ram2Ptr[jj][ii] = ram1DTCM[ii];
+    jj++;
   }
+Serial.println( __LINE__ ); delay(1);
+
+  // Do begin on SDRAM then Allocate and Initialize the SDRAM chunks 
+  if (sdram.begin()) Serial.print( "\n\tSUCCESS sdram.init()\n");
+  else Serial.print( "\n\tFAILED sdram.init()\n");
+Serial.println( __LINE__ ); delay(1);
+  for ( ii = 0; ii < 256; ii++ )
+    sdramPtr[ii] = (uint32_t *)sdram_malloc( CHUNKS );
+Serial.println( __LINE__ ); delay(1);
   jj = 0;
-  while ( sdramPtr[jj++] ) {
-    for ( int ii = 0; ii < CHUNKS / sizeof(uint32_t); ii++ )
-      ram2DMA[jj][ii] = ram1DTCM[ii];
+  while ( sdramPtr[jj] ) {
+    for ( ii = 0; ii < CHUNKS_4B; ii++ )
+      sdramPtr[jj][ii] = ram1DTCM[ii];
+    jj++;
   }
-  jj = 0;
-  kk = 0;
-  while ( ram2DMA[jj++] ) {
-    if ( 0 == memcmp( ram2DMA[jj], ram1DTCM, CHUNKS ) ) kk++;
+Serial.println( __LINE__ ); delay(1);
+  jj = kk = 0;
+  while ( ram2Ptr[jj] ) {
+    if ( 0 == memcmp( ram2Ptr[jj], ram1DTCM, CHUNKS ) ) kk++;
+    jj++;
   }
-  if ( kk == jj ) Serial.print( "%u RAM2/DMAMEM compares", kk );
-  jj = 0;
-  kk = 0;
-  while ( sdramPtr[jj++] ) {
+  if ( kk == jj ) Serial.printf( "%u RAM2/DMAMEM compares", kk );
+  jj = kk = 0;
+Serial.println( __LINE__ ); delay(1);
+  while ( sdramPtr[jj] ) {
     if ( 0 == memcmp( sdramPtr[jj], ram1DTCM, CHUNKS ) ) kk++;
+    jj++;
   }
-  if ( kk == jj ) Serial.print( "%u SDRAM compares", kk );
-
-
+  if ( kk == jj ) Serial.printf( "%u SDRAM compares", kk );
 }
 
 void loop() {
-
 }
