@@ -280,7 +280,7 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
     SEMC_MCR &= ~SEMC_MCR_MDIS;
 
     // configure SDRAM parameters
-    SEMC_BR0 = 0x90000000 | SEMC_BR_MS(13 /*13 = 32 Mbyte*/) | SEMC_BR_VLD;
+    SEMC_BR0 = 0x80000000 | SEMC_BR_MS(13 /*13 = 32 Mbyte*/) | SEMC_BR_VLD;
     SEMC_SDRAMCR0 = SEMC_SDRAMCR0_CL(3) |
         SEMC_SDRAMCR0_COL(3) |  // 3 = 9 bit column
         SEMC_SDRAMCR0_BL(3) |   // 3 = 8 word burst length
@@ -325,24 +325,24 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
     //  precharge all
     //  auto refresh (NXP SDK sends this twice, why?)
     //  mode set
-    bool result_cmd = SendIPCommand(0x90000000, 0x0f, 0, NULL);  //Prechargeall
+    bool result_cmd = SendIPCommand(0x80000000, 0x0f, 0, NULL);  //Prechargeall
     if (result_cmd != true)
     {
         return result_cmd;
     }
-    result_cmd = SendIPCommand(0x90000000, 0x0c, 0, NULL);        //AutoRefresh
+    result_cmd = SendIPCommand(0x80000000, 0x0c, 0, NULL);        //AutoRefresh
     if (result_cmd != true)
     {
         return result_cmd;
     }
-    result_cmd = SendIPCommand(0x90000000, 0x0c, 0, NULL);         //AutoRefresh
+    result_cmd = SendIPCommand(0x80000000, 0x0c, 0, NULL);         //AutoRefresh
     if (result_cmd != true)
     {
         return result_cmd;
     }
     /* Mode setting value. */
     uint16_t mode = (uint16_t)3| (uint16_t)(3 << 4);
-    result_cmd = SendIPCommand(0x90000000, 0x0a, mode, NULL);       //Modeset
+    result_cmd = SendIPCommand(0x80000000, 0x0a, mode, NULL);       //Modeset
     if (result_cmd != true)
     {
         return result_cmd;
@@ -352,7 +352,7 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
 
     if(result_cmd == false) return false;
     
-    sm_set_pool(&sdram_smalloc_pool, (void *)0x90000000, external_sdram_size * 1024 *1024, 1, NULL);
+    sm_set_pool(&sdram_smalloc_pool, (void *)0x80000000, external_sdram_size * 1024 *1024, 1, NULL);
 
     if(!check_fixed_pattern(0x5A698421))
         return false;
@@ -365,8 +365,8 @@ bool SDRAM_t4::check_fixed_pattern(uint32_t pattern)
 {
 	volatile uint32_t *p;
     uint32_t *memory_begin, *memory_end;
-    memory_begin = (uint32_t *)(0x90000000);
-	memory_end = (uint32_t *)(0x90000000 + _size * 1048576);
+    memory_begin = (uint32_t *)(0x80000000);
+	memory_end = (uint32_t *)(0x80000000 + _size * 1048576);
     
 	//Serial.printf("testing with fixed pattern %08X\n", pattern);
 	for (p = memory_begin; p < memory_end; p++) {

@@ -3,10 +3,10 @@
 
 // Configure MPU to allow read/write, disallow exec, use cache
 //put following lines in startup.c
-//	SCB_MPU_RBAR = 0x90000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
+//	SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 //	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
 	// SDRAM PCB: https://forum.pjrc.com/index.php?threads/73898/#post-334041
-//	SCB_MPU_RBAR = 0x91E00000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
+//	SCB_MPU_RBAR = 0x81E00000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 //	SCB_MPU_RASR = MEM_NOCACHE | READWRITE | NOEXEC | SIZE_2M;
 
 #include "Arduino.h"
