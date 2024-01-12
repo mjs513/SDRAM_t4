@@ -34,8 +34,8 @@ void setup()
       //while(1);
     }
     
-	memory_begin = (uint32_t *)(0x90000000);
-	memory_end = (uint32_t *)(0x90000000 + size * 1048576);
+	memory_begin = (uint32_t *)(0x80000000);
+	memory_end = (uint32_t *)(0x80000000 + size * 1048576);
 	elapsedMillis msec = 0;
 	if (!check_fixed_pattern(0x5A698421)) return;
 	if (!check_lfsr_pattern(2976674124ul)) return;
