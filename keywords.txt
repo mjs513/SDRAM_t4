@@ -1,0 +1,5 @@
+SDRAM_t4	KEYWORD1
+sdram_malloc	KEYWORD2
+sdram_calloc	KEYWORD2
+sdram_realloc	KEYWORD2
+sdream_free	KEYWORD2
