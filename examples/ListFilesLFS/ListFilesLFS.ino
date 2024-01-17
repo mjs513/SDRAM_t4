@@ -6,6 +6,8 @@ SDRAM_t4 sdram;
 #include <LittleFS.h>
 LittleFS_RAM myfs;
 
+// DELETE or EXTEND ? OR just document?
+
 char* buf;
 // SDRAM chip on Custom NXP 1062 with PJRC bootloader
 

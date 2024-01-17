@@ -227,7 +227,7 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
     // 5 = 133mhz
     // 4 = 166mhz - SDRAM rated,  see post #60
     // 3 = 221mhz
-    const unsigned int clockdiv = 5;
+    const unsigned int clockdiv = 4;
 
     CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
         CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |

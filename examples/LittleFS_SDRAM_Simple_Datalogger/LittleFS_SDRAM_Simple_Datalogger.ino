@@ -2,16 +2,17 @@
   LittleFS  datalogger
 
   This example shows how to log data from three analog sensors
-  to RAM such as SDRAM.
+  to a RAM storage device, here a SDRAM using LittleFS.
 
   This example code is in the public domain.
   It requires an SDRAM chip on Custom NXP 1062 board, with PJRC bootloader
 */
+//FixMe
 #include "SDRAM_t4.h"
-SDRAM_t4 sdram;
+SDRAM_t4 sdram; // For SDRAM support to properly equipped NXP 1062 board
 
 // This defines the size desired for runtime alloc of SDRAM for LittleFS drive
-#define SDRAM_ALLOC (10*1024*1024)  // compile time PSRAM size and is T_4.1 specific either 8 or 16, or smaller portion
+#define SDRAM_ALLOC (10*1024*1024)
 #include <LittleFS.h>
 // This declares the LittleFS Media type and gives a text name to Identify in use
 LittleFS_RAM myfs;
@@ -22,34 +23,8 @@ File dataFile;  // Specifes that dataFile is of File type
 int record_count = 0;
 bool write_data = false;
 
-void setup() {
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) { ; // wait for Arduino Serial Monitor
-  }
-
-  Serial.println("Initializing SDRAM");
-  if (sdram.begin()) Serial.print( "\n\tSUCCESS sdram.init()\n");
-  else Serial.print( "\n\tFAILED sdram.init()\n");
-  buf = (char *)sdram_malloc( SDRAM_ALLOC );
-  if (!myfs.begin(buf, SDRAM_ALLOC)) {
-    Serial.println("initialization failed!");
-    return;
-  }
-
-  Serial.print("Space Used = ");
-  Serial.println(myfs.usedSize());
-  Serial.print("Filesystem Size = ");
-  Serial.println(myfs.totalSize());
-
-  printDirectory(myfs);
-}
-#if 0
 void setup()
 {
-  pinMode( 13, OUTPUT);
-  digitalWrite(13, HIGH);
-  delay(1000);
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
   while (!Serial) {
@@ -57,7 +32,7 @@ void setup()
   }
   if ( CrashReport ) Serial.print( CrashReport );
   Serial.println("\n" __FILE__ " " __DATE__ " " __TIME__);
-  Serial.println(__LINE__); delay(1);
+
 
   Serial.print("Initializing SDRAM and LittleFS ...");
   // see if you are able to create malloc SDRAM space and a RAM disk in the space you alotted
@@ -70,9 +45,8 @@ void setup()
       // Error, so don't do anything more - stay stuck here
     }
   }
-  Serial.println(__LINE__); delay(1);
   buf = (char *)sdram_malloc( SDRAM_ALLOC );
-  Serial.println(__LINE__); delay(1);
+
   if (!myfs.begin(buf, SDRAM_ALLOC)) {
     Serial.printf("Error starting %s\n", "SDRAM RAM DISK");
     while (1) {
@@ -80,11 +54,9 @@ void setup()
     }
   }
   Serial.println("LittleFS initialized.");
-  Serial.println(__LINE__); delay(1);
-
   menu();
 }
-#endif
+
 
 void loop()
 {
