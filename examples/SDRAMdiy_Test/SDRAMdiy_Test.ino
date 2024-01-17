@@ -92,9 +92,9 @@ void setup()
   Serial.printf(" CCM_CBCMR=%08X (%.1f MHz)\n", CCM_CBCMR, frequency);
 
   size = 32;
-  memory_begin = (uint32_t *)(0x90000000);
-  memory_mid = (uint32_t *)(0x90000000 + size * 524288);
-  memory_end = (uint32_t *)(0x90000000 + size * 1048576);
+  memory_begin = (uint32_t *)(0x80000000);
+  memory_mid = (uint32_t *)(0x80000000 + size * 524288);
+  memory_end = (uint32_t *)(0x890000000 + size * 1048576);
 #else // T_4.1 PSRAM
   const float clocks[4] = {396.0f, 720.0f, 664.62f, 528.0f};
   const float frequency = clocks[(CCM_CBCMR >> 8) & 3] / (float)(((CCM_CBCMR >> 29) & 7) + 1);

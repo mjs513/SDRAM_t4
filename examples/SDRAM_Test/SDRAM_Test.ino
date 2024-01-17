@@ -29,6 +29,11 @@ void setup()
     // from begin
     // begin(uint16 external_memory_size) where size is in
     // MB
+    // In addition the SDRAM clock speed can be set using
+    // begin(32, 166);
+    // and if the cap has been removed on EMC_39:
+    // begin(32, 166, 1);
+    // See library readme for more info.
     if(!sdram.begin()) {
       Serial.println("SDRAM FAILED TO INITIALIZE.....");
       //while(1);
