@@ -246,7 +246,7 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size, uint8_t clock, uint8_t NOCAP)
     }
             
     const unsigned int clockdiv = _clock;
-    Serial.printf("Clock set at: %d\n", clockdiv);
+    //Serial.printf("Clock set at: %d\n", clockdiv);
         
     /* Experimental note (see https://forum.pjrc.com/index.php?threads/call-to-arms-teensy-sdram-true.73898/post-335619):
     *  if you want to try 198 MHz overclock
