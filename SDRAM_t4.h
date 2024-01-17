@@ -6,8 +6,8 @@
 //	SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 //	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
 	// SDRAM PCB: https://forum.pjrc.com/index.php?threads/73898/#post-334041
-//	SCB_MPU_RBAR = 0x81E00000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
-//	SCB_MPU_RASR = MEM_NOCACHE | READWRITE | NOEXEC | SIZE_2M;
+//  this should be in TD1.59b5 and greater.  If not use the files in the coreleft\
+//  files directory of the repo
 
 #include "Arduino.h"
 #include "smalloc.h"
@@ -22,7 +22,7 @@ void *sdram_realloc(void *ptr, size_t size);
 class SDRAM_t4 {
 public:
     constexpr SDRAM_t4() {  };
-    static bool begin(uint8_t external_sdram_size = 32);
+    static bool begin(uint8_t external_sdram_size = 32, uint8_t clock = 166, uint8_t NOCAP = 1);
     
 private:
     static unsigned int ns_to_clocks(float ns, float freq);

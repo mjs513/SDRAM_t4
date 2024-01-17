@@ -220,28 +220,53 @@ bool SDRAM_t4::IPCommandComplete()
     return true;
 }
 
-bool SDRAM_t4::begin(uint8_t external_sdram_size)
+bool SDRAM_t4::begin(uint8_t external_sdram_size, uint8_t clock, uint8_t NOCAP)
 {
     _size = external_sdram_size;
-    // use PLL3 PFD1 664.62 divided by 4 or 5, for 166 or 133 MHz
-    // 5 = 133mhz
-    // 4 = 166mhz - SDRAM rated,  see post #60
-    // 3 = 221mhz
-    const unsigned int clockdiv = 4;
-
-    CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
-        CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
-        CCM_CBCDR_SEMC_PODF(clockdiv-1);
+    uint8_t _clock = 0;
+    
+    if(clock > 221 || clock < 133) return false;
+    
+    switch(clock) {
+        case 133:
+            _clock = 5;
+            break;
+        case 166:
+            _clock = 4;
+            break;
+        case 221:
+            _clock = 3;
+            break;
+        case 198:
+            _clock = 2;
+            break;
+        default:
+            _clock = 4;
+            break;
+    }
+            
+    const unsigned int clockdiv = _clock;
+    Serial.printf("Clock set at: %d\n", clockdiv);
         
     /* Experimental note (see https://forum.pjrc.com/index.php?threads/call-to-arms-teensy-sdram-true.73898/post-335619):
     *  if you want to try 198 MHz overclock
     *  const unsigned int clockdiv = 2; // PLL2_PFD2 / 2 = 396 / 2 = 198 MHz
-    *
-    *    CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7) | CCM_CBCDR_SEMC_ALT_CLK_SEL)) |
-    *    CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_PODF(clockdiv-1);  
-    * If it doesn't work, maybe try soldering a 5pF or 10pF capacitor at C29 
-    */    
-        
+    */
+    if(clockdiv == 2) {
+        CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7) | CCM_CBCDR_SEMC_ALT_CLK_SEL)) |
+        CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_PODF(clockdiv-1);  
+    /* If it doesn't work, maybe try soldering a 5pF or 10pF capacitor at C29 
+    */
+    } else {
+    // use PLL3 PFD1 664.62 divided by 4 or 5, for 166 or 133 MHz
+    // 5 = 133mhz
+    // 4 = 166mhz - SDRAM rated,  see post #60
+    // 3 = 221mhz
+        CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
+            CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
+            CCM_CBCDR_SEMC_PODF(clockdiv-1);
+    }
+    
     delayMicroseconds(1);
     const float freq = 664.62e6 / (float)clockdiv;
     CCM_CCGR3 |= CCM_CCGR3_SEMC(CCM_CCGR_ON);
@@ -264,11 +289,11 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size)
 
     configure_sdram_pins();
 
-    //if(NOCAP == 1) {
+    if(NOCAP == 1) {
         SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
-    //} else  { // enable SEMC_MCR_DQSMD (EMC_39
-    //    SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
-    //}
+    } else  { // enable SEMC_MCR_DQSMD (EMC_39
+        SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
+    }
 
     // TODO: reference manual page 1364 says "Recommend to set BMCR0 with 0x0 for
     // applications that require restrict sequence of transactions", same on BMCR1
