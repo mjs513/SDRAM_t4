@@ -1,13 +1,6 @@
 #ifndef _SDRAM_T4_h
 #define _SDRAM_T4_h
 
-// Configure MPU to allow read/write, disallow exec, use cache
-//put following lines in startup.c
-//	SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
-//	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
-	// SDRAM PCB: https://forum.pjrc.com/index.php?threads/73898/#post-334041
-//  this should be in TD1.59b5 and greater.  If not use the files in the coreleft\
-//  files directory of the repo
 
 #include "Arduino.h"
 #include "smalloc.h"
