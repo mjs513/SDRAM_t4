@@ -2,16 +2,17 @@
   LittleFS  datalogger
 
   This example shows how to log data from three analog sensors
-  to RAM such as SDRAM.
+  to a RAM storage device, here a SDRAM using LittleFS.
 
   This example code is in the public domain.
   It requires an SDRAM chip on Custom NXP 1062 board, with PJRC bootloader
 */
+//FixMe
 #include "SDRAM_t4.h"
-SDRAM_t4 sdram;
+SDRAM_t4 sdram; // For SDRAM support to properly equipped NXP 1062 board
 
 // This defines the size desired for runtime alloc of SDRAM for LittleFS drive
-#define SDRAM_ALLOC (10*1024*1024)  // compile time PSRAM size and is T_4.1 specific either 8 or 16, or smaller portion
+#define SDRAM_ALLOC (10*1024*1024)
 #include <LittleFS.h>
 // This declares the LittleFS Media type and gives a text name to Identify in use
 LittleFS_RAM myfs;
@@ -24,9 +25,6 @@ bool write_data = false;
 
 void setup()
 {
-  pinMode( 13, OUTPUT);
-  digitalWrite(13, HIGH);
-  delay(1000);
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
   while (!Serial) {

@@ -66,16 +66,10 @@ void setup()
   pinMode(13, OUTPUT);
   if ( CrashReport ) Serial.print( CrashReport );
 
-#if 0 // todo get the right stuff FOR SDRAM
-  const float clocks[4] = {396.0f, 720.0f, 664.62f, 528.0f};
-  const float frequency = clocks[(CCM_CBCMR >> 8) & 3] / (float)(((CCM_CBCMR >> 29) & 7) + 1);
-  Serial.printf(" CCM_CBCMR=%08X (%.1f MHz)\n", CCM_CBCMR, frequency);
-#endif
+  memory_begin = (uint32_t *)(0x80000000);
+  memory_end = (uint32_t *)(0x80000000 + size * 1048576);
 
-  memory_begin = (uint32_t *)(0x90000000);
-  memory_end = (uint32_t *)(0x90000000 + size * 1048576);
-
-  if (sdram.init()) {
+  if (sdram.begin()) {
     Serial.print( "\n\tSUCCESS sdram.init()\n");
     Serial.print( "\n\tSEND USB to repeat test\n");
   }
@@ -83,6 +77,8 @@ void setup()
   Serial.printf("EXTMEM Memory Test, %d Mbyte\t", size);
   Serial.printf("begin, %08X \t", memory_begin);
   Serial.printf("end, %08X \n", memory_end);
+  Serial.printf("\nProgress #=fixed pattern, '.'=PsuedoRand patterns, Click Send to reRun testing \n");
+  Serial.printf("\tIf built with DUAL Serial second SerMon will show progress details.\n");
 }
 
 uint32_t doTest( uint do_one ) {
