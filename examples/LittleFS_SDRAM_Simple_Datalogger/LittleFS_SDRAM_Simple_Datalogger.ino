@@ -22,29 +22,6 @@ File dataFile;  // Specifes that dataFile is of File type
 int record_count = 0;
 bool write_data = false;
 
-void setup() {
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) { ; // wait for Arduino Serial Monitor
-  }
-
-  Serial.println("Initializing SDRAM");
-  if (sdram.begin()) Serial.print( "\n\tSUCCESS sdram.init()\n");
-  else Serial.print( "\n\tFAILED sdram.init()\n");
-  buf = (char *)sdram_malloc( SDRAM_ALLOC );
-  if (!myfs.begin(buf, SDRAM_ALLOC)) {
-    Serial.println("initialization failed!");
-    return;
-  }
-
-  Serial.print("Space Used = ");
-  Serial.println(myfs.usedSize());
-  Serial.print("Filesystem Size = ");
-  Serial.println(myfs.totalSize());
-
-  printDirectory(myfs);
-}
-#if 0
 void setup()
 {
   pinMode( 13, OUTPUT);
@@ -57,7 +34,7 @@ void setup()
   }
   if ( CrashReport ) Serial.print( CrashReport );
   Serial.println("\n" __FILE__ " " __DATE__ " " __TIME__);
-  Serial.println(__LINE__); delay(1);
+
 
   Serial.print("Initializing SDRAM and LittleFS ...");
   // see if you are able to create malloc SDRAM space and a RAM disk in the space you alotted
@@ -70,9 +47,8 @@ void setup()
       // Error, so don't do anything more - stay stuck here
     }
   }
-  Serial.println(__LINE__); delay(1);
   buf = (char *)sdram_malloc( SDRAM_ALLOC );
-  Serial.println(__LINE__); delay(1);
+
   if (!myfs.begin(buf, SDRAM_ALLOC)) {
     Serial.printf("Error starting %s\n", "SDRAM RAM DISK");
     while (1) {
@@ -80,11 +56,9 @@ void setup()
     }
   }
   Serial.println("LittleFS initialized.");
-  Serial.println(__LINE__); delay(1);
-
   menu();
 }
-#endif
+
 
 void loop()
 {
