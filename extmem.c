@@ -8,7 +8,7 @@
 struct smalloc_pool sdram_smalloc_pool;
 
 
-#define IS_SDRAM(addr) (((uint32_t)addr >> 28) == 9)
+#define IS_SDRAM(addr) (((uint32_t)addr >> 28) == 8)
 
 void *sdram_malloc(size_t size)
 {
