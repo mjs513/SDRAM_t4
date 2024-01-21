@@ -1,19 +1,20 @@
 #include "SDRAM_t4.h"
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
+uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
 
 /********************************************************************
- * Example that does extensive pattern write and (re)Read to test memory integrity:
- *
- * This example does direct memory addressing from memory_begin to memory_end
- * Lists of patterns Random and Fixed that are written and then Read and tested to be as expected
- *  
- * Successful output below, if a progress indicator "#" or "." shows "F" that test pattern failed.
- * If built with Dual Serial a second SerMon can show added in progress output
- * 
- * Expected Output:
- *   --- START 57 test patterns ------ with 3 reReads ... wait ...
- * #############............................................
- * No Errors. All memory tests passed :-)	(time 93.38 secs)
+   Example that does extensive pattern write and (re)Read to test memory integrity:
+
+   This example does direct memory addressing from memory_begin to memory_end
+   Lists of patterns Random and Fixed that are written and then Read and tested to be as expected
+
+   Successful output below, if a progress indicator "#" or "." shows "F" that test pattern failed.
+   If built with Dual Serial a second SerMon can show added in progress output
+
+   Expected Output:
+     --- START 57 test patterns ------ with 3 reReads ... wait ...
+   #############............................................
+   No Errors. All memory tests passed :-)	(time 93.38 secs)
  *****************************************************************************/
 
 // constructor for SDRAM - though here the memory pool is accessed by direct address
@@ -46,9 +47,12 @@ void loop() {
   }
   if (inputSer && size > 0) {
     uint32_t testmsec;
-    Serial.printf("\n  --- START 57 test patterns ------ with %u reReads ... wait ...\n", readRepeat);
+    uint32_t testCnt = fixPCnt;
+    if ( 0 == readFixed ) testCnt += lfsrCnt;
+
+    Serial.printf("\n  --- START %u test patterns ------ with %u reReads ... wait ...\n", testCnt, readRepeat);
 #ifdef USB_DUAL_SERIAL
-    SerialUSB1.printf("\n  --- START 57 test patterns ------ with %u reReads ... wait ...\n", readRepeat);
+    SerialUSB1.printf("\n  --- START %u test patterns ------ with %u reReads ... wait ...\n", testCnt, readRepeat);
 #endif
 
     testmsec = millis();
@@ -59,7 +63,7 @@ void loop() {
 #endif
       totErrs += check_fixed_pattern(fixPatt[ii]);
     }
-    for (uint ii = 0; ii < lfsrCnt; ii++) {
+    for (uint ii = 0; 0==readFixed && ii < lfsrCnt; ii++) {
       digitalToggle(13);
 #ifdef USB_DUAL_SERIAL
       SerialUSB1.printf("\n\t>>**>> PseudoRand(%u) Seed %u with readRepeat %u  ...", ii, lfsrPatt[ii], readRepeat);
@@ -77,7 +81,13 @@ void loop() {
 #endif
   }
   digitalWrite(13, HIGH);
-  inputSer = false;
+  if ( 1 == readFixed ) {
+    readFixed = 0;
+    inputSer = true;
+  }
+  else {
+    inputSer = false;
+  }
 }
 
 void setup() {
@@ -87,10 +97,10 @@ void setup() {
   if (CrashReport) Serial.print(CrashReport);
 
   /**********************************************************
-     * sdram.begin initializes the available SDRAM Module
-     *  Here >> begin(SIZE, SPEED, NOCAP);:
-     * begin(32, 166, 1);
-     * See library readme for more info.
+       sdram.begin initializes the available SDRAM Module
+        Here >> begin(SIZE, SPEED, NOCAP);:
+       begin(32, 166, 1);
+       See library readme for more info.
      *********************************************************/
   if (sdram.begin(size, 166, 1)) {
     Serial.print("\n\tSUCCESS sdram.init()\n");
@@ -103,17 +113,7 @@ void setup() {
   Serial.printf("EXTMEM Memory Test, %d Mbyte\t", size);
   Serial.printf("begin, %08X \t", memory_begin);
   Serial.printf("end, %08X \n", memory_end);
-}
-
-uint32_t doTest(uint do_one) {
-  uint32_t totErrs = 0;
-  if (size == 0) return 0;
-  if (do_one >= lfsrCnt) return 0;
-#ifdef USB_DUAL_SERIAL
-  SerialUSB1.printf("\n\t>>**>> PseudoRand(%u) Seed %u with readRepeat %u  ...", do_one, lfsrPatt[do_one], readRepeat);
-#endif
-  totErrs += check_lfsr_pattern(lfsrPatt[do_one]);
-  return totErrs;
+  readFixed = 1; // start loop and run only Fixed Patterns once
 }
 
 // fill the Low half of RAM with a pseudo-random sequence, then check it against copy made to Upper half
