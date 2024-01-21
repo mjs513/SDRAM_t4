@@ -76,7 +76,8 @@ void loop() {
       Serial.printf("\nNo Errors. All memory tests passed :-)\t(time %.2f secs)\n", testmsec / 1000.0);
     else
       Serial.printf("\nTotal errors found %u\t(time %.2f secs)\n", totErrs, testmsec / 1000.0);
-    Serial.print("\n Send to restart. '1' or 'k' for 100 or 1,000 reReads and 's' for start fast test.");
+    if ( 0 == readFixed )
+      Serial.print("\n Send to restart. '1' or 'k' for 100 or 1,000 reReads and 's' for start fast test.");
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs)\n", totErrs, testmsec / 1000.0);
 #endif
@@ -111,9 +112,10 @@ void setup() {
     Serial.print("\n\tIf built with DUAL Serial second SerMon will show details.\n\n");
   }
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
-  Serial.printf("EXTMEM Memory Test, %d Mbyte\t", size);
-  Serial.printf("begin, %08X \t", memory_begin);
-  Serial.printf("end, %08X \n", memory_end);
+  Serial.printf("EXTMEM Memory Test, %u Mbyte   ", size);
+  Serial.printf("SDRAM speed %u Mhz ", speed);
+  Serial.printf("begin@ %08X  ", memory_begin);
+  Serial.printf("end@ %08X \n", memory_end);
   readFixed = 1; // start loop and run only Fixed Patterns once
 }
 
