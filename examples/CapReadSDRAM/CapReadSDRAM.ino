@@ -1,7 +1,7 @@
 #include "SDRAM_t4.h"
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
-
+uint32_t speed = 166; // 133, 166, 198, 221
 /********************************************************************
    Example that does extensive pattern write and (re)Read to test memory integrity:
 
@@ -102,7 +102,7 @@ void setup() {
        begin(32, 166, 1);
        See library readme for more info.
      *********************************************************/
-  if (sdram.begin(size, 166, 1)) {
+  if (sdram.begin(size, speed, 1)) {
     Serial.print("\n\tSUCCESS sdram.init()\n");
     Serial.print("\n\tSEND USB to repeat test after completion");
     Serial.print("\n\tSend '1' for 100 or 'k' gives 1K read repeats and 's' returns to start short test value.");
