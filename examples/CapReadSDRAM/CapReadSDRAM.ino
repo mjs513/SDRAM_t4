@@ -13,9 +13,15 @@ uint32_t noCap = true; // "false" if a capacitor is present on pin EMC_39
    If built with Dual Serial a second SerMon can show added in progress output
 
    Expected Output:
-     --- START 57 test patterns ------ with 3 reReads ... wait ...
-   #############............................................
-   No Errors. All memory tests passed :-)	(time 93.38 secs)
+  EXTMEM Memory Test, 32 Mbyte   SDRAM speed 166 Mhz F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000
+
+  --- START 13 test patterns ------ with 3 reReads ... wait ...
+  #############
+  No Errors. All memory tests passed :-)  (time 12.70 secs)
+
+  --- START 57 test patterns ------ with 3 reReads ... wait ...
+  #############............................................
+  No Errors. All memory tests passed :-)  (time 93.38 secs)
  *****************************************************************************/
 
 // constructor for SDRAM - though here the memory pool is accessed by direct address
@@ -28,11 +34,11 @@ uint32_t check_lfsr_pattern(uint32_t seed);
 uint32_t check_fixed_pattern(uint32_t pattern);
 uint32_t doTest(uint do_one);
 
-// These are the tested PsuedoRandom and FIXED patterns loists to be tested:
-static uint32_t lfsrPatt[44] = { 2976674124ul, 1438200953ul, 3413783263ul, 1900517911ul, 1227909400ul, 276562754ul, 146878114ul, 615545407ul, 110497896ul, 74539250ul, 4197336575ul, 2280382233ul, 542894183ul, 3978544245ul, 2315909796ul, 3736286001ul, 2876690683ul, 215559886ul, 539179291ul, 537678650ul, 4001405270ul, 2169216599ul, 4036891097ul, 1535452389ul, 2959727213ul, 4219363395ul, 1036929753ul, 2125248865ul, 3177905864ul, 2399307098ul, 3847634607ul, 27467969ul, 520563506ul, 381313790ul, 4174769276ul, 3932189449ul, 4079717394ul, 868357076ul, 2474062993ul, 1502682190ul, 2471230478ul, 85016565ul, 1427530695ul, 1100533073ul };
-const uint32_t lfsrCnt = sizeof(lfsrPatt) / sizeof(lfsrPatt[0]);
-static uint32_t fixPatt[13] = { 0x5A698421, 0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF, 0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 0xFF00FF00, 0xFFFF0000, 0xFFFFFFFF, 0x00000000 };
-const uint32_t fixPCnt = sizeof(fixPatt) / sizeof(fixPatt[0]);
+// These are the tested PsuedoRandom and FIXED patterns lists to be tested:
+static uint32_t lfsrPatt[] = { 2976674124ul, 1438200953ul, 3413783263ul, 1900517911ul, 1227909400ul, 276562754ul, 146878114ul, 615545407ul, 110497896ul, 74539250ul, 4197336575ul, 2280382233ul, 542894183ul, 3978544245ul, 2315909796ul, 3736286001ul, 2876690683ul, 215559886ul, 539179291ul, 537678650ul, 4001405270ul, 2169216599ul, 4036891097ul, 1535452389ul, 2959727213ul, 4219363395ul, 1036929753ul, 2125248865ul, 3177905864ul, 2399307098ul, 3847634607ul, 27467969ul, 520563506ul, 381313790ul, 4174769276ul, 3932189449ul, 4079717394ul, 868357076ul, 2474062993ul, 1502682190ul, 2471230478ul, 85016565ul, 1427530695ul, 1100533073ul };
+const uint32_t lfsrCnt = sizeof(lfsrPatt) / sizeof(lfsrPatt[0]); // Count of above Psuedo Random Pattern starting values
+static uint32_t fixPatt[] = { 0x5A698421, 0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF, 0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 0xFF00FF00, 0xFFFF0000, 0xFFFFFFFF, 0x00000000 };
+const uint32_t fixPCnt = sizeof(fixPatt) / sizeof(fixPatt[0]); // Count of Fixed patterns used for all writes for each pass
 
 void loop() {
   uint32_t totErrs = 0;
@@ -114,7 +120,7 @@ void setup() {
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
   Serial.printf("EXTMEM Memory Test, %u Mbyte   ", size);
   Serial.printf("SDRAM speed %u Mhz ", speed);
-  Serial.printf("F_CPU_ACTUAL %u Mhz ", F_CPU_ACTUAL/1000000);
+  Serial.printf("F_CPU_ACTUAL %u Mhz ", F_CPU_ACTUAL / 1000000);
   Serial.printf("begin@ %08X  ", memory_begin);
   Serial.printf("end@ %08X \n", memory_end);
   readFixed = 1; // start loop and run only Fixed Patterns once
