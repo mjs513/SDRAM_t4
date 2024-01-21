@@ -2,6 +2,7 @@
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
 uint32_t speed = 166; // 133, 166, 198, 221
+uint32_t noCap = false; // if a capacitor is present on pin EMC_39
 /********************************************************************
    Example that does extensive pattern write and (re)Read to test memory integrity:
 
@@ -63,7 +64,7 @@ void loop() {
 #endif
       totErrs += check_fixed_pattern(fixPatt[ii]);
     }
-    for (uint ii = 0; 0==readFixed && ii < lfsrCnt; ii++) {
+    for (uint ii = 0; 0 == readFixed && ii < lfsrCnt; ii++) {
       digitalToggle(13);
 #ifdef USB_DUAL_SERIAL
       SerialUSB1.printf("\n\t>>**>> PseudoRand(%u) Seed %u with readRepeat %u  ...", ii, lfsrPatt[ii], readRepeat);
@@ -102,7 +103,7 @@ void setup() {
        begin(32, 166, 1);
        See library readme for more info.
      *********************************************************/
-  if (sdram.begin(size, speed, 1)) {
+  if (sdram.begin(size, speed, noCap)) {
     Serial.print("\n\tSUCCESS sdram.init()\n");
     Serial.print("\n\tSEND USB to repeat test after completion");
     Serial.print("\n\tSend '1' for 100 or 'k' gives 1K read repeats and 's' returns to start short test value.");
