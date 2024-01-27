@@ -289,7 +289,7 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size, uint8_t clock, uint8_t useDQS)
 
     configure_sdram_pins();
 
-    if(NOCAP == 1) {
+    if(useDQS == 1) {
         SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
     } else  { // enable SEMC_MCR_DQSMD (EMC_39
         SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);

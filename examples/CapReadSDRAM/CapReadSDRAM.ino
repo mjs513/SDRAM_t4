@@ -106,11 +106,11 @@ void setup() {
 
   /**********************************************************
        sdram.begin initializes the available SDRAM Module
-        Here >> begin(SIZE, SPEED, NOCAP);:
+        Here >> begin(SIZE, SPEED, USEDQS);:
        begin(32, 166, 1);
        See library readme for more info.
      *********************************************************/
-  if (sdram.begin(size, speed, noCap)) {
+  if (sdram.begin(size, speed, useDQS)) {
     Serial.print("\n\tSUCCESS sdram.init()\n");
     Serial.print("\n\tSEND USB to repeat test after completion");
     Serial.print("\n\tSend '1' for 100 or 'k' gives 1K read repeats and 's' returns to start short test value.");
