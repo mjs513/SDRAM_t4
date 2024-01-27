@@ -2,7 +2,7 @@
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
 uint32_t speed = 166; // 133, 166, 198, 221
-uint32_t noCap = true; // "false" if a capacitor is present on pin EMC_39
+uint32_t useDQS = true; // "false" if a capacitor is present on pin EMC_39
 /********************************************************************
    Example that does extensive pattern write and (re)Read to test memory integrity:
 

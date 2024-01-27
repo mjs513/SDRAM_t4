@@ -29,7 +29,7 @@ void setup() {
      * In addition the SDRAM clock speed can be set using
      * begin(32, 166);
      * and if the cap has been removed on EMC_39:
-     * begin(32, 166, 1);
+     * begin(32, 166, 0);
      * See library readme for more info.
      *********************************************************/
     if(!sdram.begin()) {

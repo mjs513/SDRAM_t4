@@ -35,9 +35,9 @@ The second option is the SDRAM clock speed,  as you can see it defaults to 166Mh
 
 The third option is unique to the Dogbone6 Development Board.  On the development board there is a 100nf capacitor between EMC_39 (DQS) and ground.  NXP recommends that this pin should be left floating but for overclocking you will need a capacitor ( actually size to be determined).  See https://forum.pjrc.com/index.php?threads/call-to-arms-teensy-sdram-true.73898/post-335532 and https://forum.pjrc.com/index.php?threads/call-to-arms-teensy-sdram-true.73898/post-335536 for begining of discussion the this capacitor.
 
-This third option ```NOCAP``` allows for correctly setting DQS to internal timing if a capacitor is present or not.  It is a basically a true or false (1 or 0) if a capacitor is present on this pin.  So for example if we running at 166Mhz and there is no capacitor on EMC_39
+This third option ```useDQS``` allows for correctly setting DQS to internal timing if a capacitor is present or not.  It is a basically a true or false (1 or 0) if a capacitor is present on this pin.  So for example if we running at 166Mhz and there is no capacitor on EMC_39
 ```
-begin(32, 166, 1);
+begin(32, 166, 0);
 ```
 
 METHODS SUPPORT:

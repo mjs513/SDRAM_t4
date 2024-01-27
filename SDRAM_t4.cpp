@@ -220,7 +220,7 @@ bool SDRAM_t4::IPCommandComplete()
     return true;
 }
 
-bool SDRAM_t4::begin(uint8_t external_sdram_size, uint8_t clock, uint8_t NOCAP)
+bool SDRAM_t4::begin(uint8_t external_sdram_size, uint8_t clock, uint8_t useDQS)
 {
     _size = external_sdram_size;
     uint8_t _clock = 0;
