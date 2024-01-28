@@ -78,12 +78,7 @@ void loop() {
       totErrs += check_lfsr_pattern(lfsrPatt[ii]);
     }
     testmsec = millis() - testmsec;
-    if (0 == totErrs)
-      Serial.printf("\nNo Errors. All memory tests passed :-)\t(time %.2f secs)\n", testmsec / 1000.0);
-    else
-      Serial.printf("\nTest result: %u read errors\n\nExtra info: ran for%.2f seconds)\n", totErrs, testmsec / 1000.0);
-    if ( 0 == readFixed )
-      Serial.print("Send to restart. '1' or 'k' for 100 or 1,000 reReads and 's' for start fast test.");
+    Serial.printf("\nTest result: %u read errors\n\nExtra info: ran for%.2f seconds)\n", totErrs, testmsec / 1000.0);
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs)\n", totErrs, testmsec / 1000.0);
 #endif
