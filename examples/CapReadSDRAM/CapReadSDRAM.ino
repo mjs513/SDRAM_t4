@@ -78,7 +78,7 @@ void loop() {
       totErrs += check_lfsr_pattern(lfsrPatt[ii]);
     }
     testmsec = millis() - testmsec;
-    Serial.printf("\nTest result: %u read errors\n\nExtra info: ran for%.2f seconds)\n", totErrs, testmsec / 1000.0);
+    Serial.printf("\nTest result: %u read errors\n\nExtra info: ran for %.2f seconds)\n", totErrs, testmsec / 1000.0);
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs)\n", totErrs, testmsec / 1000.0);
 #endif
