@@ -1,7 +1,7 @@
 #include "SDRAM_t4.h"
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
-uint32_t speed = 198; // 133, 166, 198, 221
+uint32_t speed = 206; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
 uint32_t useDQS = true; // "false" if a capacitor is not present on pin EMC_39 or
                         // speed < 166Mhz
 /********************************************************************
