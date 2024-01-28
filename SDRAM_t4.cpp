@@ -276,10 +276,11 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size, uint16_t clock, uint8_t useDQS
         base_frequency = 664.6154e6;
     } else if (use_pll3_custom_pfd1) {
         // custom PLL3 PDF1: 173,180,187,196,206,216,227,240,254,270,288,etc
-        CCM_ANALOG_PFD_480_CLR = 0xFF << 8;
+        CCM_ANALOG_PFD_480_SET = 0x80 << 8;
+        CCM_ANALOG_PFD_480_CLR = 0x7F << 8;
         unsigned int frac = roundf(8640.0f / (float)(clock * clockdiv));
         if (frac < 12 || frac > 35) return false; // should never happen...
-        CCM_ANALOG_PFD_480_SET = (0x80 | frac) << 8;
+        CCM_ANALOG_PFD_480_TOG = (0x80 | frac) << 8;
         CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
             CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
             CCM_CBCDR_SEMC_PODF(clockdiv-1);
