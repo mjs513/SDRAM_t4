@@ -280,6 +280,9 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size, uint16_t clock, uint8_t useDQS
         unsigned int frac = roundf(8640.0f / (float)(clock * clockdiv));
         if (frac < 12 || frac > 35) return false; // should never happen...
         CCM_ANALOG_PFD_480_SET = (0x80 | frac) << 8;
+        CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
+            CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
+            CCM_CBCDR_SEMC_PODF(clockdiv-1);
         base_frequency = 8640.0e6f / (float)frac;
     } else {
         return false;
