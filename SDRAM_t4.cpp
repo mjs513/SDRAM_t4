@@ -220,44 +220,52 @@ bool SDRAM_t4::IPCommandComplete()
     return true;
 }
 
-bool SDRAM_t4::begin(uint8_t external_sdram_size, uint8_t clock, uint8_t useDQS)
+bool SDRAM_t4::begin(uint8_t external_sdram_size, uint16_t clock, uint8_t useDQS)
 {
     _size = external_sdram_size;
-    uint8_t _clock = 0;
+    unsigned int clockdiv;
+    float base_frequency;
+    bool use_pll2_pfd2 = false;
+    bool use_pll3_pfd1 = false;
+    bool use_pll3_custom_pfd1 = false;
     
-    if(clock > 221 || clock < 133) return false;
+    if (clock > 360 || clock < 100) return false;
     
     switch(clock) {
         case 133:
-            _clock = 5;
+            clockdiv = 5;
+            use_pll3_pfd1 = true;
             break;
         case 166:
-            _clock = 4;
+            clockdiv = 4;
+            use_pll3_pfd1 = true;
             break;
         case 221:
-            _clock = 3;
+            clockdiv = 3;
+            use_pll3_pfd1 = true;
             break;
         case 198:
-            _clock = 2;
+            clockdiv = 2;
+            use_pll2_pfd2 = true;
             break;
         default:
-            _clock = 4;
+            clockdiv = (clock < 124) ? 3 : 2;
+            use_pll3_custom_pfd1 = true;
             break;
     }
             
-    const unsigned int clockdiv = _clock;
-    //Serial.printf("Clock set at: %d\n", clockdiv);
         
     /* Experimental note (see https://forum.pjrc.com/index.php?threads/call-to-arms-teensy-sdram-true.73898/post-335619):
     *  if you want to try 198 MHz overclock
     *  const unsigned int clockdiv = 2; // PLL2_PFD2 / 2 = 396 / 2 = 198 MHz
     */
-    if(clockdiv == 2) {
+    if (use_pll2_pfd2) {
         CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7) | CCM_CBCDR_SEMC_ALT_CLK_SEL)) |
         CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_PODF(clockdiv-1);  
+        base_frequency = 396.0e6;
     /* If it doesn't work, maybe try soldering a 5pF or 10pF capacitor at C29 
     */
-    } else {
+    } else if (use_pll3_pfd1) {
     // use PLL3 PFD1 664.62 divided by 4 or 5, for 166 or 133 MHz
     // 5 = 133mhz
     // 4 = 166mhz - SDRAM rated,  see post #60
@@ -265,10 +273,21 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size, uint8_t clock, uint8_t useDQS)
         CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
             CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
             CCM_CBCDR_SEMC_PODF(clockdiv-1);
+        base_frequency = 664.6154e6;
+    } else if (use_pll3_custom_pfd1) {
+        // custom PLL3 PDF1: 173,180,187,196,206,216,227,240,254,270,288,etc
+        CCM_ANALOG_PFD_480_CLR = 0xFF << 8;
+        unsigned int frac = roundf(8640.0f / (float)(clock * clockdiv));
+        if (frac < 12 || frac > 35) return false; // should never happen...
+        CCM_ANALOG_PFD_480_SET = (0x80 | frac) << 8;
+        base_frequency = 8640.0e6f / (float)frac;
+    } else {
+        return false;
     }
     
     delayMicroseconds(1);
-    const float freq = 664.62e6 / (float)clockdiv;
+    const float freq = base_frequency / (float)clockdiv;
+    Serial.printf("Clock set %.2f MHz\n", freq / 1.0e6f);
     CCM_CCGR3 |= CCM_CCGR3_SEMC(CCM_CCGR_ON);
     
     // software reset

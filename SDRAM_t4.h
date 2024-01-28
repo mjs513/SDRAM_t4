@@ -15,7 +15,7 @@ void *sdram_realloc(void *ptr, size_t size);
 class SDRAM_t4 {
 public:
     constexpr SDRAM_t4() {  };
-    static bool begin(uint8_t external_sdram_size = 32, uint8_t clock = 166, uint8_t useDQS = 0);
+    static bool begin(uint8_t external_sdram_size = 32, uint16_t clock = 166, uint8_t useDQS = 0);
     
 private:
     static unsigned int ns_to_clocks(float ns, float freq);
