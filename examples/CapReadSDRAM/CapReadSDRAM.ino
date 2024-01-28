@@ -1,7 +1,7 @@
 #include "SDRAM_t4.h"
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
-uint32_t speed = 166; // 133, 166, 198, 221
+uint32_t speed = 198; // 133, 166, 198, 221
 uint32_t useDQS = true; // "false" if a capacitor is not present on pin EMC_39
 /********************************************************************
    Example that does extensive pattern write and (re)Read to test memory integrity:
@@ -55,7 +55,7 @@ void loop() {
   if (inputSer && size > 0) {
     uint32_t testmsec;
     uint32_t testCnt = fixPCnt;
-    if ( 0 == readFixed ) testCnt += lfsrCnt;
+    testCnt += lfsrCnt;
 
     Serial.printf("\n  --- START %u test patterns ------ with %u reReads ... wait ...\n", testCnt, readRepeat);
 #ifdef USB_DUAL_SERIAL
@@ -70,7 +70,7 @@ void loop() {
 #endif
       totErrs += check_fixed_pattern(fixPatt[ii]);
     }
-    for (uint ii = 0; 0 == readFixed && ii < lfsrCnt; ii++) {
+    for (uint ii = 0; ii < lfsrCnt; ii++) {
       digitalToggle(13);
 #ifdef USB_DUAL_SERIAL
       SerialUSB1.printf("\n\t>>**>> PseudoRand(%u) Seed %u with readRepeat %u  ...", ii, lfsrPatt[ii], readRepeat);
@@ -81,9 +81,9 @@ void loop() {
     if (0 == totErrs)
       Serial.printf("\nNo Errors. All memory tests passed :-)\t(time %.2f secs)\n", testmsec / 1000.0);
     else
-      Serial.printf("\nTotal errors found %u\t(time %.2f secs)\n", totErrs, testmsec / 1000.0);
+      Serial.printf("\nTest result: %u read errors\n\nExtra info: ran for%.2f seconds)\n", totErrs, testmsec / 1000.0);
     if ( 0 == readFixed )
-      Serial.print("\n Send to restart. '1' or 'k' for 100 or 1,000 reReads and 's' for start fast test.");
+      Serial.print("Send to restart. '1' or 'k' for 100 or 1,000 reReads and 's' for start fast test.");
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs)\n", totErrs, testmsec / 1000.0);
 #endif
@@ -91,6 +91,7 @@ void loop() {
   digitalWrite(13, HIGH);
   if ( 1 == readFixed ) {
     readFixed = 0;
+    readRepeat = 100;
     inputSer = true;
   }
   else {
