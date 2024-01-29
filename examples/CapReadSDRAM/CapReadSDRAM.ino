@@ -2,9 +2,23 @@
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
 uint32_t speed = 206; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
-uint32_t useDQS = true; // "false" if a capacitor is not present on pin EMC_39 or
-                        // speed < 166Mhz
 /********************************************************************
+   This test is meant to evaluate how well different capacitors connected to the
+   DQS pin (EMC_39) improve timing margin.  If you have created a custom PCB and
+   you are wondering which capacitor is best to use on your PCB, you can use this
+   test to compare the effect of different capacitors.
+
+   Run this test at a high enough overclock speed for some read errors to occur.
+   When run at error free rated speed, you have no way to gauge how well the
+   capacitor improves timing.  Only by overclocking to the point where errors occur
+   can you see the difference between capacitors.  The capacitor which allow for
+   fewest read errors with overclocking can be assumed to give best timing margin
+   when running at rated speed.
+
+   Remember, the total capacitance is the sum of the pin's self capacitance,
+   the capacitance of your PCB trace and pads, and whatever capacitor you connect.
+   Results may vary slightly depending for different PCB designs and stackup specs.
+
    Example that does extensive pattern write and (re)Read to test memory integrity:
 
    This example does direct memory addressing from memory_begin to memory_end
@@ -12,6 +26,8 @@ uint32_t useDQS = true; // "false" if a capacitor is not present on pin EMC_39 o
 
    Successful output below, if a progress indicator "#" or "." shows "F" that test pattern failed.
    If built with Dual Serial a second SerMon can show added in progress output
+
+   TODO: this "Expected Output" is old info and should be updated.
 
    Expected Output:
   EXTMEM Memory Test, 32 Mbyte   SDRAM speed 166 Mhz F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000
@@ -107,7 +123,7 @@ void setup() {
        begin(32, 166, 1);
        See library readme for more info.
      *********************************************************/
-  if (sdram.begin(size, speed, useDQS)) {
+  if (sdram.begin(size, speed, true)) { // always UseDQS to test capacitance
     Serial.print("\n\tSUCCESS sdram.init()\n");
     Serial.print("\n\tSEND USB to repeat test after completion");
     Serial.print("\n\tSend '1' for 100 or 'k' gives 1K read repeats and 's' returns to start short test value.");
