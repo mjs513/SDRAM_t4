@@ -1,7 +1,7 @@
 #include "SDRAM_t4.h"
 uint32_t readRepeat = 3;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 uint32_t readFixed = 1; // start loop and run only Fixed Patterns once
-uint32_t speed = 206; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
+uint32_t speed = 198; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
 /********************************************************************
    This test is meant to evaluate how well different capacitors connected to the
    DQS pin (EMC_39) improve timing margin.  If you have created a custom PCB and
@@ -28,19 +28,19 @@ uint32_t speed = 206; //  frequencies 173,180,187,196,206,216,227,240,254,270,28
    If built with Dual Serial a second SerMon can show added in progress output
 
    Expected Output:
-EXTMEM Memory Test, 32 Mbyte   SDRAM speed 206 Mhz F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000 
+  EXTMEM Memory Test, 32 Mbyte   SDRAM speed 206 Mhz F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000
 
   --- START 57 test patterns ------ with 3 reReads ... wait ...
-#############............................................
-Test result: 0 read errors
+  #############............................................
+  Test result: 0 read errors
 
-Extra info: ran for 86.35 seconds
+  Extra info: ran for 86.35 seconds
 
   --- START 57 test patterns ------ with 100 reReads ... wait ...
-#############............................................
-Test result: 0 read errors
+  #############............................................
+  Test result: 0 read errors
 
-Extra info: ran for 2500.23 seconds *****************************************************************************/
+  Extra info: ran for 2500.23 seconds *****************************************************************************/
 
 // constructor for SDRAM - though here the memory pool is accessed by direct address
 SDRAM_t4 sdram;
@@ -164,9 +164,9 @@ uint32_t check_lfsr_pattern(uint32_t seed) {
     }
   }
   MemResSum = 0;
-  MemRes = 0;
 
   for (uint32_t ii = 0; ii < readRepeat; ii++) {
+    MemRes = 0;
     // validate the expected value are still read as expected
     arm_dcache_flush_delete((void *)memory_begin, (uint32_t)memory_end - (uint32_t)memory_begin);
     reg = seed;
@@ -212,6 +212,7 @@ uint32_t check_fixed_pattern(uint32_t pattern) {
   arm_dcache_flush_delete((void *)memory_begin,
                           (uint32_t)memory_end - (uint32_t)memory_begin);
   for (uint ii = 0; ii < readRepeat; ii++) {
+    MemRes = 0;
     for (p = memory_begin; p < memory_end; p++) {
       uint32_t actual = *p;
       if (actual != pattern) MemRes++;
