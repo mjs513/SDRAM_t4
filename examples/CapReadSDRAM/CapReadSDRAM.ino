@@ -133,7 +133,7 @@ void setup() {
   }
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
   Serial.printf("EXTMEM Memory Test, %u Mbyte   ", size);
-  Serial.printf("SDRAM speed %u Mhz ", speed);
+  Serial.printf("SDRAM speed %f Mhz ", sdram.getFrequency());
   Serial.printf("F_CPU_ACTUAL %u Mhz ", F_CPU_ACTUAL / 1000000);
   Serial.printf("begin@ %08X  ", memory_begin);
   Serial.printf("end@ %08X \n", memory_end);
