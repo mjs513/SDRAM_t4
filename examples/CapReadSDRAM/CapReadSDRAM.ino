@@ -27,19 +27,20 @@ uint32_t speed = 206; //  frequencies 173,180,187,196,206,216,227,240,254,270,28
    Successful output below, if a progress indicator "#" or "." shows "F" that test pattern failed.
    If built with Dual Serial a second SerMon can show added in progress output
 
-   TODO: this "Expected Output" is old info and should be updated.
-
    Expected Output:
-  EXTMEM Memory Test, 32 Mbyte   SDRAM speed 166 Mhz F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000
-
-  --- START 13 test patterns ------ with 3 reReads ... wait ...
-  #############
-  No Errors. All memory tests passed :-)  (time 12.70 secs)
+EXTMEM Memory Test, 32 Mbyte   SDRAM speed 206 Mhz F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000 
 
   --- START 57 test patterns ------ with 3 reReads ... wait ...
-  #############............................................
-  No Errors. All memory tests passed :-)  (time 93.38 secs)
- *****************************************************************************/
+#############............................................
+Test result: 0 read errors
+
+Extra info: ran for 86.35 seconds
+
+  --- START 57 test patterns ------ with 100 reReads ... wait ...
+#############............................................
+Test result: 0 read errors
+
+Extra info: ran for 2500.23 seconds *****************************************************************************/
 
 // constructor for SDRAM - though here the memory pool is accessed by direct address
 SDRAM_t4 sdram;
