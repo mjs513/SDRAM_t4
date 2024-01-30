@@ -292,7 +292,7 @@ bool SDRAM_t4::begin(uint8_t external_sdram_size, uint16_t clock, uint8_t useDQS
     delayMicroseconds(1);
     const float freq = base_frequency / (float)clockdiv;
     frequency = freq / 1.0e6f;
-    Serial.printf("Clock set %.2f MHz\n", freq / 1.0e6f);
+    //Serial.printf("Clock set %.2f MHz\n", freq / 1.0e6f);
     CCM_CCGR3 |= CCM_CCGR3_SEMC(CCM_CCGR_ON);
     
     // software reset
