@@ -98,6 +98,17 @@ void setup() {
   const double totalReads = (double)size * 1048576 * 25 * testCnt;
   const float errPercent = totalErrs / totalReads * 100.0;
   Serial.printf("\nTest result: %u read errors (%.4f%%)\n\n", totalErrs, errPercent);
+  if (totalErrs == 0) {
+    Serial.println("Normally no read errors is good, but for comparing the effect of your");
+    Serial.println("capacitor connected to DQS (EMC_39) you need errors!  When all reads are");
+    Serial.println("correct, you can not know if the error-free result is because you have");
+    Serial.println("good timing margin or your SDRAM reads are just barely succeeding.  Only");
+    Serial.println("when you see errors can you estimate your capacitor's effect on timing.");
+    Serial.println("Please increase the speed and re-run this test for each capacitor.  Use");
+    Serial.println("a speed fast enough for all tests to give at least some errors.  The");
+    Serial.println("difference in number of errors allows you to gauge the relative effect");
+    Serial.println("of various capacitors to choose the best capacitor for your PCB design.");
+  }
   Serial.printf("Extra info: ran for %.2f seconds\n", testmsec / 1000.0);
 #ifdef USB_DUAL_SERIAL
   SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs\n", totalErrs, testmsec / 1000.0);
