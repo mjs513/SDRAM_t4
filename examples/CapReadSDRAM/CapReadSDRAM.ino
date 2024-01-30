@@ -98,7 +98,7 @@ void setup() {
   const double totalReads = (double)size * 1048576 * 25 * testCnt;
   const float errPercent = totalErrs / totalReads * 100.0;
   Serial.printf("\nTest result: %u read errors (%.4f%%)\n\n", totalErrs, errPercent);
-  Serial.printf("Extra info: ran for %.2f seconds\n", totalErrs, testmsec / 1000.0);
+  Serial.printf("Extra info: ran for %.2f seconds\n", testmsec / 1000.0);
 #ifdef USB_DUAL_SERIAL
   SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs\n", totalErrs, testmsec / 1000.0);
 #endif
