@@ -1,8 +1,8 @@
 #include "SDRAM_t4.h"
 uint32_t speed = 196; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
-bool quickTest = false; // Do the 57 tests with FEW_REREADS before TYPICAL_REREADS
+bool quickTest = true; // false; // Do the 57 tests with FEW_REREADS before TYPICAL_REREADS
 #define FEW_REREADS 3
-#define TYPICAL_REREADS 5 // 100
+#define TYPICAL_REREADS 25 // 100
 uint32_t readRepeat = FEW_REREADS;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 /********************************************************************
    This test is meant to evaluate how well different capacitors connected to the
@@ -100,9 +100,10 @@ void loop() {
     }
     testmsec = millis() - testmsec;
     if ( true == quickTest )
-      Serial.printf("\n%lu Quick Test result: %lu read errors\n\nExtra info: ran for %.2f seconds {total reads %llu}\n", readRepeat, totErrs, testmsec / 1000.0, totReads);
+      Serial.printf("\nQuick Test result: %u read errors\n\n", totErrs);
     else
-      Serial.printf("\n%lu Read Test result: %lu read errors\n\nExtra info: ran for %.2f seconds {total reads %llu}\n", readRepeat, totErrs, testmsec / 1000.0, totReads);
+      Serial.printf("\nTest result: %u read errors\n\n", totErrs);
+    Serial.printf("Extra info: ran for %.2f seconds\n", testmsec / 1000.0);
 
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs\n", totErrs, testmsec / 1000.0);
