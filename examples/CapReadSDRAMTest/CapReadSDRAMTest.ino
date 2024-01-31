@@ -1,5 +1,9 @@
 #include "SDRAM_t4.h"
-const uint32_t speed = 254; // allowed range is 100 to 360 MHz
+uint32_t speed = 196; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
+bool quickTest = false; // Do the 57 tests with FEW_REREADS before TYPICAL_REREADS
+#define FEW_REREADS 3
+#define TYPICAL_REREADS 5 // 100
+uint32_t readRepeat = FEW_REREADS;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
 /********************************************************************
    This test is meant to evaluate how well different capacitors connected to the
    DQS pin (EMC_39) improve timing margin.  If you have created a custom PCB and
@@ -42,12 +46,13 @@ const uint32_t speed = 254; // allowed range is 100 to 360 MHz
 
 // constructor for SDRAM - though here the memory pool is accessed by direct address
 SDRAM_t4 sdram;
-const uint8_t size = 32;  // SDRAM 32MB Size
+uint size = 32;  // SDRAM 32MB Size
 uint32_t *memory_begin = (uint32_t *)(0x80000000);
 uint32_t *memory_end = (uint32_t *)(0x80000000 + size * 1048576);
 
 uint32_t check_lfsr_pattern(uint32_t seed);
 uint32_t check_fixed_pattern(uint32_t pattern);
+uint32_t doTest(uint do_one);
 
 // These are the tested PsuedoRandom and FIXED patterns lists to be tested:
 static uint32_t lfsrPatt[] = { 2976674124ul, 1438200953ul, 3413783263ul, 1900517911ul, 1227909400ul, 276562754ul, 146878114ul, 615545407ul, 110497896ul, 74539250ul, 4197336575ul, 2280382233ul, 542894183ul, 3978544245ul, 2315909796ul, 3736286001ul, 2876690683ul, 215559886ul, 539179291ul, 537678650ul, 4001405270ul, 2169216599ul, 4036891097ul, 1535452389ul, 2959727213ul, 4219363395ul, 1036929753ul, 2125248865ul, 3177905864ul, 2399307098ul, 3847634607ul, 27467969ul, 520563506ul, 381313790ul, 4174769276ul, 3932189449ul, 4079717394ul, 868357076ul, 2474062993ul, 1502682190ul, 2471230478ul, 85016565ul, 1427530695ul, 1100533073ul };
@@ -55,75 +60,93 @@ const uint32_t lfsrCnt = sizeof(lfsrPatt) / sizeof(lfsrPatt[0]); // Count of abo
 static uint32_t fixPatt[] = { 0x5A698421, 0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF, 0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 0xFF00FF00, 0xFFFF0000, 0xFFFFFFFF, 0x00000000 };
 const uint32_t fixPCnt = sizeof(fixPatt) / sizeof(fixPatt[0]); // Count of Fixed patterns used for all writes for each pass
 
+uint64_t totReads = 0;
+
+void loop() {
+  uint64_t totErrs = 0;
+  static bool inputSer = true;
+  char chIn;
+  while (Serial.available()) {  // send usb TO REPEAT TEST
+    chIn = Serial.read();
+    if ( '1' == chIn ) readRepeat = TYPICAL_REREADS;
+    if ( 'K' == chIn ) readRepeat = 1000;
+    if ( 's' == chIn ) readRepeat = 3; // Fast test
+    inputSer = true;
+  }
+  if (inputSer && size > 0) {
+    uint32_t testmsec;
+    uint32_t testCnt = fixPCnt;
+    testCnt += lfsrCnt;
+
+    Serial.printf("\n  --- START %u test patterns ------ with %u reReads ... wait ...\n", testCnt, readRepeat);
+#ifdef USB_DUAL_SERIAL
+    SerialUSB1.printf("\n  --- START %u test patterns ------ with %u reReads ... wait ...\n", testCnt, readRepeat);
+#endif
+
+    testmsec = millis();
+    for (uint ii = 0; ii < fixPCnt; ii++) {
+      digitalToggle(13);
+#ifdef USB_DUAL_SERIAL
+      SerialUSB1.printf("\n\t>>**>> FixedPatt(%u) pattern %08X with readRepeat %u  ...", ii, fixPatt[ii], readRepeat);
+#endif
+      totErrs += check_fixed_pattern(fixPatt[ii]);
+    }
+    for (uint ii = 0; ii < lfsrCnt; ii++) {
+      digitalToggle(13);
+#ifdef USB_DUAL_SERIAL
+      SerialUSB1.printf("\n\t>>**>> PseudoRand(%u) Seed %u with readRepeat %u  ...", ii, lfsrPatt[ii], readRepeat);
+#endif
+      totErrs += check_lfsr_pattern(lfsrPatt[ii]);
+    }
+    testmsec = millis() - testmsec;
+    if ( true == quickTest )
+      Serial.printf("\n%lu Quick Test result: %lu read errors\n\nExtra info: ran for %.2f seconds {total reads %llu}\n", readRepeat, totErrs, testmsec / 1000.0, totReads);
+    else
+      Serial.printf("\n%lu Read Test result: %lu read errors\n\nExtra info: ran for %.2f seconds {total reads %llu}\n", readRepeat, totErrs, testmsec / 1000.0, totReads);
+
+#ifdef USB_DUAL_SERIAL
+    SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs\n", totErrs, testmsec / 1000.0);
+#endif
+  }
+  digitalWrite(13, HIGH);
+  if ( true == quickTest ) {
+    quickTest = false;
+    readRepeat = TYPICAL_REREADS;
+    inputSer = true;
+  }
+  else {
+    inputSer = false;
+  }
+  totReads = 0;
+}
+
 void setup() {
   while (!Serial)
     ;  // wait
   pinMode(13, OUTPUT);
   if (CrashReport) Serial.print(CrashReport);
+  if ( false == quickTest )
+    readRepeat = TYPICAL_REREADS;
 
-  Serial.println("Test capacitor effect effect on SDRAM read timing margin");
-  // sdram.begin initializes the available SDRAM Module.  See library readme for more info.
+  /**********************************************************
+       sdram.begin initializes the available SDRAM Module
+        Here >> begin(SIZE, SPEED, USEDQS);:
+       begin(32, 166, 1);
+       See library readme for more info.
+     *********************************************************/
   if (sdram.begin(size, speed, true)) { // always UseDQS to test capacitance
-    Serial.print("\n\tSDRAM hardware initialized.\n");
-    Serial.print("\n\tThis test takes approximately 5 minutes to complete.");
-    Serial.print("\n\tProgress:: '#'=fixed pattern, '.'=PsuedoRand patterns, and 'f' or 'F' shows Failed test pattern");
+    Serial.print("\n\tSUCCESS sdram.init()\n");
+    Serial.print("\n\tSEND USB to repeat test after completion");
+    Serial.print("\n\tSend '1' for 100 or 'k' gives 1K read repeats and 's' returns to start short test value.");
+    Serial.print("\n\tProgress:: '#'=fixed pattern, '.'=PsuedoRand patterns, and 'F' shows Failed test pattern");
     Serial.print("\n\tIf built with DUAL Serial second SerMon will show details.\n\n");
-  } else {
-    Serial.print("\n\tCould not initialize SDRAM hardware\n");
-    return;
   }
-
-  const uint32_t testCnt = fixPCnt + lfsrCnt;
-  Serial.printf("\n  --- START %u test patterns ... wait ...\n", testCnt);
-#ifdef USB_DUAL_SERIAL
-  SerialUSB1.printf("\n  --- START %u test patterns ... wait ...\n", testCnt);
-#endif
-  uint32_t testmsec = millis();
-  uint32_t totalErrs = 0;
-  for (uint ii = 0; ii < fixPCnt; ii++) {
-    digitalToggle(13);
-#ifdef USB_DUAL_SERIAL
-    SerialUSB1.printf("\n\t>>**>> FixedPatt(%u) pattern %08X ...", ii, fixPatt[ii]);
-#endif
-    totalErrs += check_fixed_pattern(fixPatt[ii]);
-  }
-  for (uint ii = 0; ii < lfsrCnt; ii++) {
-    digitalToggle(13);
-#ifdef USB_DUAL_SERIAL
-    SerialUSB1.printf("\n\t>>**>> PseudoRand(%u) Seed %u ...", ii, lfsrPatt[ii]);
-#endif
-    totalErrs += check_lfsr_pattern(lfsrPatt[ii]);
-  }
-  testmsec = millis() - testmsec;
-  const double totalReads = (double)size * 1048576 * 25 * testCnt;
-  const float errPercent = totalErrs / totalReads * 100.0;
-  Serial.printf("\nTest result: %u read errors (%.4f%%)\n\n", totalErrs, errPercent);
-  if (totalErrs == 0) {
-    Serial.println("Normally no read errors is good, but for comparing the effect of your");
-    Serial.println("capacitor connected to DQS (EMC_39) you need errors!  When all reads are");
-    Serial.println("correct, you can not know if the error-free result is because you have");
-    Serial.println("good timing margin or your SDRAM reads are just barely succeeding.  Only");
-    Serial.println("when you see errors can you estimate your capacitor's effect on timing.");
-    Serial.println("Please increase the speed and re-run this test for each capacitor.  Use");
-    Serial.println("a speed fast enough for all tests to give at least some errors.  The");
-    Serial.println("difference in number of errors allows you to gauge the relative effect");
-    Serial.println("of various capacitors to choose the best capacitor for your PCB design.");
-  }
-  Serial.printf("Extra info: ran for %.2f seconds\n", testmsec / 1000.0);
-#ifdef USB_DUAL_SERIAL
-  SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs\n", totalErrs, testmsec / 1000.0);
-#endif
-
-  Serial.println("\n\n");
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
   Serial.printf("EXTMEM Memory Test, %u Mbyte   ", size);
   Serial.printf("SDRAM speed %.2f Mhz ", sdram.getFrequency());
   Serial.printf("F_CPU_ACTUAL %u Mhz ", F_CPU_ACTUAL / 1000000);
   Serial.printf("begin@ %08X  ", memory_begin);
   Serial.printf("end@ %08X \n", memory_end);
-}
-
-void loop() {
 }
 
 // fill the Low half of RAM with a pseudo-random sequence, then check it against copy made to Upper half
@@ -133,7 +156,7 @@ uint32_t check_lfsr_pattern(uint32_t seed) {
   volatile uint32_t *p;
   uint32_t testMsec;
   uint32_t reg;
-  uint32_t MemResSum = 0;
+  uint32_t MemResSum, MemRes;
   char cRes = '.';
 
   reg = seed;
@@ -149,13 +172,16 @@ uint32_t check_lfsr_pattern(uint32_t seed) {
       }
     }
   }
+  MemResSum = 0;
 
-  for (uint32_t ii = 0; ii < 25; ii++) {
+  for (uint32_t ii = 0; ii < readRepeat; ii++) {
+    MemRes = 0;
     // validate the expected value are still read as expected
     arm_dcache_flush_delete((void *)memory_begin, (uint32_t)memory_end - (uint32_t)memory_begin);
     reg = seed;
     for (p = memory_begin; p < memory_end; p++) {
-      if (*p != reg) MemResSum++;
+      if (*p != reg) MemRes++;
+      totReads++;
       for (int i = 0; i < 3; i++) {
         if (reg & 1) {
           reg >>= 1;
@@ -165,6 +191,7 @@ uint32_t check_lfsr_pattern(uint32_t seed) {
         }
       }
     }
+    MemResSum += MemRes;
   }
 
   testMsec = micros() - testMsec;
@@ -185,23 +212,27 @@ uint32_t check_lfsr_pattern(uint32_t seed) {
 uint32_t check_fixed_pattern(uint32_t pattern) {
   volatile uint32_t *p;
   uint32_t testMsec;
-  uint32_t MemResSum = 0;
+  uint32_t MemResSum = 0, MemRes;
   char cRes = '#';
 
   testMsec = micros();
   for (p = memory_begin; p < memory_end; p++) {
     *p = pattern;
   }
-  for (uint ii = 0; ii < 25; ii++) {
-    arm_dcache_flush_delete((void *)memory_begin, (uint32_t)memory_end - (uint32_t)memory_begin);
+  arm_dcache_flush_delete((void *)memory_begin,
+                          (uint32_t)memory_end - (uint32_t)memory_begin);
+  for (uint ii = 0; ii < readRepeat; ii++) {
+    MemRes = 0;
     for (p = memory_begin; p < memory_end; p++) {
       uint32_t actual = *p;
-      if (actual != pattern) MemResSum++;
+      if (actual != pattern) MemRes++;
+      totReads++;
     }
+    MemResSum += MemRes;
   }
   testMsec = micros() - testMsec;
   if (0 != MemResSum) {
-    cRes = 'f';
+    cRes = 'F';
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\n\tFail fixed pattern not same with seed=%u", pattern);
 #endif
