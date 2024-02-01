@@ -122,7 +122,9 @@ void setup() {
   pinMode(13, OUTPUT);
   if (CrashReport) Serial.print(CrashReport);
   pinMode(16, INPUT_PULLDOWN);
-  uint32_t eeVal = EEPROM.read( 100 );
+  uint32_t eeVal;
+#if 1 == FORCE_RESTARTS
+  eeVal = EEPROM.read( 100 );
   if ( digitalRead ( 16 ) ) {
     eeVal = FIRST_SPEED;
     EEPROM.write( 100, eeVal ); // FIRST RUN INIT
@@ -130,7 +132,6 @@ void setup() {
     while ( digitalRead ( 16 ) );
   }
 
-#if 1 == FORCE_RESTARTS
   if ( eeVal < speedCnt ) {
     speed = speedRange[eeVal];
     eeVal += 1;
@@ -147,15 +148,13 @@ void setup() {
   SCB_AIRCR = 0x05FA0004; // Restart to EEPROM test value rerun
 #else
   readRepeat = TYPICAL_REREADS;
-  for ( eeVal=FIRST_SPEED; eeVal<speedCnt; eeVal++  ) {
+  for ( eeVal = FIRST_SPEED; eeVal < speedCnt; eeVal++  ) {
     speed = speedRange[eeVal];
     setSpeed( speed );
     doTest();
   }
-  EEPROM.write( 100, FIRST_SPEED ); // FIRST RUN INIT
   Serial.printf("\n\tSDRAM Stop/Restart Pass Complete\n");
   return;
-
 #endif
 }
 
