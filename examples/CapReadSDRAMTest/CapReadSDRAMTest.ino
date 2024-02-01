@@ -2,7 +2,8 @@
 #include "EEPROM.h"
 uint32_t speed = 196; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
 uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288};
-const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]); // Count of Fixed patterns used for all writes for each pass
+#define SKIP_LAST_SPEEDS 2 // Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
+const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
 #define FIRST_SPEED 5 // index into speedRange to start testing: [0]==133 and [5]==227
 #define TYPICAL_REREADS 5 // 25 // 100
 uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Reads and Test compare 'readRepeat' times
@@ -79,7 +80,7 @@ void doTest() {
     uint32_t testCnt = fixPCnt;
     testCnt += lfsrCnt;
 
-    Serial.printf("\nStart %u test with %u reads %.2f MHz ... wait ...:", testCnt, readRepeat, sdram.getFrequency());
+    Serial.printf("\nStart %u test with %u reads %.2f MHz ... wait::", testCnt, readRepeat, sdram.getFrequency());
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\n  --- START %u test patterns ------ with %u reReads ... wait ...\n", testCnt, readRepeat);
 #endif
