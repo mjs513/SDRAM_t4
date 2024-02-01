@@ -6,6 +6,7 @@ uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288};
 const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
 #define FIRST_SPEED 5 // index into speedRange to start testing: [0]==133 and [5]==227
 #define TYPICAL_REREADS 5 // 25 // 100
+#define FORCE_RESTARTS 0 // set 1 to restart and use EEPROM for progress. Otherwise runs without restarting.
 uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Reads and Test compare 'readRepeat' times
 /********************************************************************
    This test is meant to evaluate how well different capacitors connected to the
@@ -129,12 +130,12 @@ void setup() {
     while ( digitalRead ( 16 ) );
   }
 
+#if 1 == FORCE_RESTARTS
   if ( eeVal < speedCnt ) {
     speed = speedRange[eeVal];
     eeVal += 1;
     EEPROM.write( 100, eeVal );
   }
-
   readRepeat = TYPICAL_REREADS;
   setSpeed( speed );
   doTest();
@@ -144,6 +145,18 @@ void setup() {
     return;
   }
   SCB_AIRCR = 0x05FA0004; // Restart to EEPROM test value rerun
+#else
+  readRepeat = TYPICAL_REREADS;
+  for ( eeVal=FIRST_SPEED; eeVal<speedCnt; eeVal++  ) {
+    speed = speedRange[eeVal];
+    setSpeed( speed );
+    doTest();
+  }
+  EEPROM.write( 100, FIRST_SPEED ); // FIRST RUN INIT
+  Serial.printf("\n\tSDRAM Stop/Restart Pass Complete\n");
+  return;
+
+#endif
 }
 
 void setSpeed( uint32_t speed ) {
