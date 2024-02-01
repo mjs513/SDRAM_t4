@@ -1,12 +1,11 @@
 #include "SDRAM_t4.h"
 #include "EEPROM.h"
 uint32_t speed = 196; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
-uint32_t speedRange[] = {196, 206, 216, 227, 240, 254, 270, 288};
+uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288};
 const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]); // Count of Fixed patterns used for all writes for each pass
-#define FIRST_SPEED 3 // index into speedRange to start testing
-#define FEW_REREADS 3
+#define FIRST_SPEED 5 // index into speedRange to start testing: [0]==133 and [5]==227
 #define TYPICAL_REREADS 5 // 25 // 100
-uint32_t readRepeat = FEW_REREADS;  // Writes once to Test memory, will repeat Reads and Test compare 'readRepeat' times
+uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Reads and Test compare 'readRepeat' times
 /********************************************************************
    This test is meant to evaluate how well different capacitors connected to the
    DQS pin (EMC_39) improve timing margin.  If you have created a custom PCB and
