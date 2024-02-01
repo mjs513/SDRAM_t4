@@ -125,16 +125,11 @@ void setup() {
   if ( digitalRead ( 16 ) ) {
     eeVal = FIRST_SPEED;
     EEPROM.write( 100, eeVal ); // FIRST RUN INIT
-    Serial.printf("\n\tSDRAM PAUSED w/Restart Pin 16 HIGH : Will run when pin 16 goes low.\n");
+    Serial.printf("\n\tSDRAM testing PAUSED w/Restart Pin 16 HIGH : Will run when pin 16 goes low.\n");
     while ( digitalRead ( 16 ) );
   }
 
-  if ( eeVal > speedCnt ) {
-    EEPROM.write( 100, FIRST_SPEED ); // FIRST RUN INIT
-    Serial.printf("\n\tSDRAM Stop/Restart Pass Complete\n");
-    return;
-  }
-  if ( eeVal <= speedCnt ) {
+  if ( eeVal < speedCnt ) {
     speed = speedRange[eeVal];
     eeVal += 1;
     EEPROM.write( 100, eeVal );
@@ -143,6 +138,11 @@ void setup() {
   readRepeat = TYPICAL_REREADS;
   setSpeed( speed );
   doTest();
+  if ( eeVal >= speedCnt ) {
+    EEPROM.write( 100, FIRST_SPEED ); // FIRST RUN INIT
+    Serial.printf("\n\tSDRAM Stop/Restart Pass Complete\n");
+    return;
+  }
   SCB_AIRCR = 0x05FA0004; // Restart to EEPROM test value rerun
 }
 
