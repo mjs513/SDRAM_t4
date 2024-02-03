@@ -1,12 +1,14 @@
-#include "SDRAM_t4.h"
-#include "EEPROM.h"
-uint32_t speed = 196; //  frequencies 173,180,187,196,206,216,227,240,254,270,288,etc
-uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288};
-#define SKIP_LAST_SPEEDS 2 // Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
-const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
-#define FIRST_SPEED 5 // index into speedRange to start testing: [0]==133 and [5]==227
+#define FIRST_SPEED 4 // ZERO BASED index: into speedRange to start testing: [0]==133 and [5]==227
+#define SKIP_LAST_SPEEDS 1 // COUNT: Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
+
+// index offset 1st ref:   0    1    2    3    4    5    6    7    8    9
+uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288}; // ? frequencies 173,180,187,196,206,216,227,240,254,270,288
+
 #define TYPICAL_REREADS 5 // 25 // 100
-#define FORCE_RESTARTS 0 // set 1 to restart and use EEPROM for progress. Otherwise runs without restarting.
+uint32_t speed = 0; // If speed not ZERO do a single SPEED test. If ZERO follow loop with control index #defines above
+
+#include "SDRAM_t4.h"
+const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
 uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Reads and Test compare 'readRepeat' times
 /********************************************************************
    This test is meant to evaluate how well different capacitors connected to the
@@ -81,7 +83,7 @@ void doTest() {
     uint32_t testCnt = fixPCnt;
     testCnt += lfsrCnt;
 
-    Serial.printf("\nStart %u test with %u reads %.2f MHz ... wait::", testCnt, readRepeat, sdram.getFrequency());
+    Serial.printf("\nStart %u tests with %u reads %.2f MHz ... wait::", testCnt, readRepeat, sdram.getFrequency());
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\n  --- START %u test patterns ------ with %u reReads ... wait ...\n", testCnt, readRepeat);
 #endif
@@ -102,10 +104,10 @@ void doTest() {
       totErrs += check_lfsr_pattern(lfsrPatt[ii]);
     }
     testmsec = millis() - testmsec;
-    double totalReads = (double)size * 1048576 * readRepeat * testCnt;
+    double totalReads = (double)size / sizeof(uint32_t) * 1048576 * readRepeat * testCnt;
     float errPercent = totErrs / totalReads * 100.0;
 
-    Serial.printf("\nTest result: %u read errors (%.4f%%)\n", totErrs, errPercent);
+    Serial.printf("\nTest result: %llu read errors (%.4f%%)\n", totErrs, errPercent);
     Serial.printf("Extra info: ran for %.2f seconds at %u MHz\n\n", testmsec / 1000.0, speed);
 
 #ifdef USB_DUAL_SERIAL
@@ -123,39 +125,20 @@ void setup() {
   if (CrashReport) Serial.print(CrashReport);
   pinMode(16, INPUT_PULLDOWN);
   uint32_t eeVal;
-#if 1 == FORCE_RESTARTS
-  eeVal = EEPROM.read( 100 );
-  if ( digitalRead ( 16 ) ) {
-    eeVal = FIRST_SPEED;
-    EEPROM.write( 100, eeVal ); // FIRST RUN INIT
-    Serial.printf("\n\tSDRAM testing PAUSED w/Restart Pin 16 HIGH : Will run when pin 16 goes low.\n");
-    while ( digitalRead ( 16 ) );
-  }
-
-  if ( eeVal < speedCnt ) {
-    speed = speedRange[eeVal];
-    eeVal += 1;
-    EEPROM.write( 100, eeVal );
-  }
   readRepeat = TYPICAL_REREADS;
-  setSpeed( speed );
-  doTest();
-  if ( eeVal >= speedCnt ) {
-    EEPROM.write( 100, FIRST_SPEED ); // FIRST RUN INIT
-    Serial.printf("\n\tSDRAM Stop/Restart Pass Complete\n");
-    return;
+  if ( 0 == speed ) {
+    for ( eeVal = FIRST_SPEED; eeVal < speedCnt; eeVal++  ) {
+      speed = speedRange[eeVal];
+      setSpeed( speed );
+      doTest();
+    }
   }
-  SCB_AIRCR = 0x05FA0004; // Restart to EEPROM test value rerun
-#else
-  readRepeat = TYPICAL_REREADS;
-  for ( eeVal = FIRST_SPEED; eeVal < speedCnt; eeVal++  ) {
-    speed = speedRange[eeVal];
+  else {
     setSpeed( speed );
     doTest();
   }
-  Serial.printf("\n\tSDRAM Stop/Restart Pass Complete\n");
+  Serial.printf("\n\tSDRAM Stop/Restart Pass Complete {v1.0}\n");
   return;
-#endif
 }
 
 void setSpeed( uint32_t speed ) {
@@ -167,13 +150,13 @@ void setSpeed( uint32_t speed ) {
      *********************************************************/
   // Serial.printf("\n\tSDRAM set speed %u MHz \n", speed);
   if (sdram.begin(size, speed, true)) { // always UseDQS to test capacitance
-    if ( 200 > speed ) {
+    if ( 166 > speed ) {
       Serial.print("\n\tSUCCESS sdram.init()\n");
       Serial.print("\n\tProgress:: '#'=fixed, '.'=PsuedoRand patterns: when no Errors other wise first pass with error a-z or A-Z");
       Serial.print("\n\tIf built with DUAL Serial second SerMon will show details.\n\n");
     }
   }
-  if ( 200 > speed ) {
+  if ( 166 > speed ) {
     Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
     Serial.printf("SDRAM Memory Test, %u Mbyte   ", size);
     // Serial.printf("SDRAM speed %.2f Mhz ", sdram.getFrequency());
