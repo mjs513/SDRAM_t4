@@ -111,7 +111,7 @@ void setup() {
   }
   Serial.printf("Extra info: ran for %.2f seconds\n", testmsec / 1000.0);
 #ifdef USB_DUAL_SERIAL
-  SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs\n", totalErrs, testmsec / 1000.0);
+  SerialUSB1.printf("\nDone with total errors found %llu\t(time %.2f secs\n", totalErrs, testmsec / 1000.0);
 #endif
 
   Serial.println("\n\n");
