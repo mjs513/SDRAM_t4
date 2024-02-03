@@ -95,7 +95,7 @@ void setup() {
     totalErrs += check_lfsr_pattern(lfsrPatt[ii]);
   }
   testmsec = millis() - testmsec;
-  const double totalReads = (double)size * 1048576 * 25 * testCnt;
+  const double totalReads = (double)size/sizeof(uint32_t) * 1048576 * 25 * testCnt;
   const float errPercent = totalErrs / totalReads * 100.0;
   Serial.printf("\nTest result: %u read errors (%.4f%%)\n\n", totalErrs, errPercent);
   if (totalErrs == 0) {
