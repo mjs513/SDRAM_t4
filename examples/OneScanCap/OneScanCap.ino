@@ -7,6 +7,8 @@ uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288}; // ?
 #define TYPICAL_REREADS 5 // 25 : When Read Errors occur they may be from failed initial Write
 uint32_t speed = 0; // If speed not ZERO do a single SPEED test. If ZERO follow loop with control index #defines above
 
+// For standard 32MB SDRAM test don't change items ABOVE to run SDRAM from 133 - 270 MHz with write and 5 ReReads.
+
 uint64_t arrResults[10][4]; // SPEED, Time, # Errors, # Read Tests
 #include "SDRAM_t4.h"
 const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
@@ -156,7 +158,7 @@ void setup() {
     doTest();
   }
   uint32_t ii = 0;
-  Serial.printf("\nTest results %u tests with %u ReReads:\n", lfsrCnt + fixPCnt, readRepeat);
+  Serial.printf("\nTest summary: %u tests with %u ReReads at F_CPU_ACTUAL %u Mhz:\n", lfsrCnt + fixPCnt, readRepeat, F_CPU_ACTUAL / 1000000);
   while ( arrResults[ii][0] > 100 ) {
     Serial.printf("\t At %llu MHz in %llu seconds with %llu read errors", arrResults[ii][0], arrResults[ii][1], arrResults[ii][2]);
     if ( 0 != arrResults[ii][2] )
@@ -164,7 +166,7 @@ void setup() {
     Serial.println();
     ii++;
   }
-  Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.1}\n");
+  Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.2} :Note tested CAP here pF=\n");
   return;
 }
 
@@ -175,21 +177,22 @@ void setSpeed( uint32_t speed ) {
        begin(32, 166, 1);
        See library readme for more info.
      *********************************************************/
-  // Serial.printf("\n\tSDRAM set speed %u MHz \n", speed);
+  static bool doOnce = true;
   if (sdram.begin(size, speed, true)) { // always UseDQS to test capacitance
-    if ( 166 > speed ) {
-      Serial.print("\n\tSUCCESS sdram.init()\n");
+    if ( doOnce ) {
+      Serial.print("\n\tSUCCESS sdram.init()\t Default config runs in about 15 minutes.\n");
       Serial.print("\n\tProgress:: '#'=fixed, '.'=PsuedoRand patterns: when no Errors other wise first pass with error a-z or A-Z");
       Serial.print("\n\tIf built with DUAL Serial second SerMon will show details.\n\n");
     }
   }
-  if ( 166 > speed ) {
+  if ( doOnce ) {
     Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
     Serial.printf("SDRAM Memory Test, %u Mbyte   ", size);
     Serial.printf("F_CPU_ACTUAL %u Mhz ", F_CPU_ACTUAL / 1000000);
     Serial.printf("begin@ %08X  ", memory_begin);
     Serial.printf("end@ %08X \n", memory_end);
   }
+  doOnce = false;
 }
 
 // Fill RAM with a pseudo-random sequence, then check it to be same on Read Test pass
