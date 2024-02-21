@@ -4,7 +4,7 @@
 // index offset 1st ref:   0    1    2    3    4    5    6    7    8    9
 uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288}; // ? frequencies 173,180,187,196,206,216,227,240,254,270,288
 
-#define TYPICAL_REREADS 5 // 25 // 100
+#define TYPICAL_REREADS 5 // 25 : When Read Errors occur they may be from failed initial Write
 uint32_t speed = 0; // If speed not ZERO do a single SPEED test. If ZERO follow loop with control index #defines above
 
 uint64_t arrResults[10][4]; // SPEED, Time, # Errors, # Read Tests
@@ -37,19 +37,31 @@ uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Re
    If built with Dual Serial a second SerMon can show added in progress output
 
    Expected Output:
-  EXTMEM Memory Test, 32 Mbyte   SDRAM speed 206 Mhz F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000
+  SDRAM Memory Test, 32 Mbyte   F_CPU_ACTUAL 600 Mhz begin@ 80000000  end@ 82000000
 
-  --- START 57 test patterns ------ with 3 reReads ... wait ...
-  #############............................................
-  Test result: 0 read errors
+  Start 57 tests with 5 reads 132.92 MHz ... wait::#############............................................
+  Test result: 0 read errors (0.0000%)
+  Extra info: ran for 157.22 seconds at 133 MHz
 
-  Extra info: ran for 86.35 seconds
 
-  --- START 57 test patterns ------ with 100 reReads ... wait ...
-  #############............................................
-  Test result: 0 read errors
+  Start 57 tests with 5 reads 166.15 MHz ... wait::#############............................................
+  Test result: 0 read errors (0.0000%)
+  Extra info: ran for 142.00 seconds at 166 MHz
+  // OTHER SPEEDS REPEAT as above UNTIL SUMMARY AS FOLLOWS:
 
-  Extra info: ran for 2500.23 seconds *****************************************************************************/
+  Test results 57 tests with 5 ReReads:
+   At 133 MHz in 157 seconds with 0 read errors
+   At 166 MHz in 142 seconds with 0 read errors
+   At 196 MHz in 132 seconds with 0 read errors
+   At 206 MHz in 130 seconds with 0 read errors
+   At 216 MHz in 128 seconds with 0 read errors
+   At 227 MHz in 125 seconds with 0 read errors
+   At 240 MHz in 123 seconds with 0 read errors
+   At 254 MHz in 121 seconds with 378902 read errors (0.0158%)
+   At 270 MHz in 119 seconds with 1249975738 read errors (52.2838%)
+
+  SDRAM One Scan CAP test Complete {v1.1}
+*****************************************************************************/
 
 // constructor for SDRAM - though here the memory pool is accessed by direct address
 SDRAM_t4 sdram;
@@ -74,11 +86,10 @@ void loop() {
   digitalWrite(13, LOW);
   delay(200);
   digitalWrite(13, HIGH);
-
 }
 
 void doTest() {
-  static uint32_t tstIdx=0;
+  static uint32_t tstIdx = 0;
   uint64_t totErrs = 0;
   if ( size > 0) {
     uint32_t testmsec;
@@ -144,13 +155,13 @@ void setup() {
     setSpeed( speed );
     doTest();
   }
-  uint32_t ii=0;
-  Serial.printf("\nTest results %u tests with %u ReReads:\n", lfsrCnt+fixPCnt, readRepeat);
+  uint32_t ii = 0;
+  Serial.printf("\nTest results %u tests with %u ReReads:\n", lfsrCnt + fixPCnt, readRepeat);
   while ( arrResults[ii][0] > 100 ) {
     Serial.printf("\t At %llu MHz in %llu seconds with %llu read errors", arrResults[ii][0], arrResults[ii][1], arrResults[ii][2]);
     if ( 0 != arrResults[ii][2] )
       Serial.printf(" (%.4f%%)", (float)arrResults[ii][2] / (float)arrResults[ii][3] * 100.0 );
-     Serial.println();
+    Serial.println();
     ii++;
   }
   Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.1}\n");
@@ -175,16 +186,13 @@ void setSpeed( uint32_t speed ) {
   if ( 166 > speed ) {
     Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
     Serial.printf("SDRAM Memory Test, %u Mbyte   ", size);
-    // Serial.printf("SDRAM speed %.2f Mhz ", sdram.getFrequency());
     Serial.printf("F_CPU_ACTUAL %u Mhz ", F_CPU_ACTUAL / 1000000);
     Serial.printf("begin@ %08X  ", memory_begin);
     Serial.printf("end@ %08X \n", memory_end);
   }
 }
 
-// fill the Low half of RAM with a pseudo-random sequence, then check it against copy made to Upper half
-// Test: Write same Psuedo Random values to Lower and Upper (16MB of 32MB SDRAM)
-//
+// Fill RAM with a pseudo-random sequence, then check it to be same on Read Test pass
 uint32_t check_lfsr_pattern(uint32_t seed) {
   volatile uint32_t *p;
   uint32_t testMsec;
