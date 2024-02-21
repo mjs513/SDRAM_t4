@@ -1,4 +1,4 @@
-#define FIRST_SPEED 4 // ZERO BASED index: into speedRange to start testing: [0]==133 and [5]==227
+#define FIRST_SPEED 0 // ZERO BASED index: into speedRange to start testing: [0]==133 and [5]==227
 #define SKIP_LAST_SPEEDS 1 // COUNT: Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
 
 // index offset 1st ref:   0    1    2    3    4    5    6    7    8    9
@@ -7,6 +7,7 @@ uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288}; // ?
 #define TYPICAL_REREADS 5 // 25 // 100
 uint32_t speed = 0; // If speed not ZERO do a single SPEED test. If ZERO follow loop with control index #defines above
 
+uint64_t arrResults[10][4]; // SPEED, Time, # Errors, # Read Tests
 #include "SDRAM_t4.h"
 const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
 uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Reads and Test compare 'readRepeat' times
@@ -77,6 +78,7 @@ void loop() {
 }
 
 void doTest() {
+  static uint32_t tstIdx=0;
   uint64_t totErrs = 0;
   if ( size > 0) {
     uint32_t testmsec;
@@ -109,6 +111,11 @@ void doTest() {
 
     Serial.printf("\nTest result: %llu read errors (%.4f%%)\n", totErrs, errPercent);
     Serial.printf("Extra info: ran for %.2f seconds at %u MHz\n\n", testmsec / 1000.0, speed);
+    arrResults[tstIdx][0] = speed;
+    arrResults[tstIdx][1] = testmsec / 1000.0;
+    arrResults[tstIdx][2] = totErrs;
+    arrResults[tstIdx][3] = totalReads;
+    tstIdx++;
 
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\nDone with total errors found %u\t(time %.2f secs\n", totErrs, testmsec / 1000.0);
@@ -137,7 +144,16 @@ void setup() {
     setSpeed( speed );
     doTest();
   }
-  Serial.printf("\n\tSDRAM Stop/Restart Pass Complete {v1.0}\n");
+  uint32_t ii=0;
+  Serial.printf("\nTest results %u tests with %u ReReads:\n", lfsrCnt+fixPCnt, readRepeat);
+  while ( arrResults[ii][0] > 100 ) {
+    Serial.printf("\t At %llu MHz in %llu seconds with %llu read errors", arrResults[ii][0], arrResults[ii][1], arrResults[ii][2]);
+    if ( 0 != arrResults[ii][2] )
+      Serial.printf(" (%.4f%%)", (float)arrResults[ii][2] / (float)arrResults[ii][3] * 100.0 );
+     Serial.println();
+    ii++;
+  }
+  Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.1}\n");
   return;
 }
 
