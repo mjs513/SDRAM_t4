@@ -51,18 +51,18 @@ uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Re
   Extra info: ran for 142.00 seconds at 166 MHz
   // OTHER SPEEDS REPEAT as above UNTIL SUMMARY AS FOLLOWS:
 
-  Test results 57 tests with 5 ReReads:
-   At 133 MHz in 157 seconds with 0 read errors
-   At 166 MHz in 142 seconds with 0 read errors
-   At 196 MHz in 132 seconds with 0 read errors
-   At 206 MHz in 130 seconds with 0 read errors
-   At 216 MHz in 128 seconds with 0 read errors
-   At 227 MHz in 125 seconds with 0 read errors
-   At 240 MHz in 123 seconds with 0 read errors
-   At 254 MHz in 121 seconds with 378902 read errors (0.0158%)
-   At 270 MHz in 119 seconds with 1249975738 read errors (52.2838%)
+Test summary: 57 tests with 5 ReReads at F_CPU_ACTUAL 600 Mhz:
+   At 133 MHz in 160 seconds with 0 read errors
+   At 166 MHz in 145 seconds with 0 read errors
+   At 196 MHz in 136 seconds with 0 read errors
+   At 206 MHz in 133 seconds with 0 read errors
+   At 216 MHz in 132 seconds with 0 read errors
+   At 227 MHz in 128 seconds with 0 read errors
+   At 240 MHz in 127 seconds with 0 read errors
+   At 254 MHz in 124 seconds with 1010230 read errors (0.0423%)
+   At 270 MHz in 122 seconds with 1269880817 read errors (53.1163%)
 
-  SDRAM One Scan CAP test Complete {v1.1}
+  SDRAM One Scan CAP test Complete {v1.2} :Note tested CAP here pF=
 *****************************************************************************/
 
 // constructor for SDRAM - though here the memory pool is accessed by direct address
