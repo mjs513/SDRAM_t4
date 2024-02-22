@@ -51,7 +51,7 @@ uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Re
   Extra info: ran for 142.00 seconds at 166 MHz
   // OTHER SPEEDS REPEAT as above UNTIL SUMMARY AS FOLLOWS:
 
-Test summary: 57 tests with 5 ReReads at F_CPU_ACTUAL 600 Mhz:
+  Test summary: 57 tests with 5 ReReads at F_CPU_ACTUAL 600 Mhz:
    At 133 MHz in 160 seconds with 0 read errors
    At 166 MHz in 145 seconds with 0 read errors
    At 196 MHz in 136 seconds with 0 read errors
@@ -144,8 +144,15 @@ void setup() {
   pinMode(13, OUTPUT);
   if (CrashReport) {
     Serial.print(CrashReport);
-    delay(10);
-    while (1) asm ("wfi");
+    Serial.print("Any Key to continue ...");
+    delay(50);
+    while (1) {
+      if ( Serial.available() ) break;
+      asm ("wfi");
+    }
+    while ( Serial.available() ) {
+      Serial.print((char)Serial.read());
+    }
   }
   pinMode(16, INPUT_PULLDOWN);
   uint32_t eeVal;
@@ -170,7 +177,7 @@ void setup() {
     Serial.println();
     ii++;
   }
-  Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.2} :Note tested CAP here pF=\n");
+  Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.3} :Note tested CAP here pF=\n");
   return;
 }
 
