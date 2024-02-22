@@ -142,7 +142,11 @@ void setup() {
   while (!Serial)
     ;  // wait
   pinMode(13, OUTPUT);
-  if (CrashReport) Serial.print(CrashReport);
+  if (CrashReport) {
+    Serial.print(CrashReport);
+    delay(10);
+    while (1) asm ("wfi");
+  }
   pinMode(16, INPUT_PULLDOWN);
   uint32_t eeVal;
   readRepeat = TYPICAL_REREADS;
